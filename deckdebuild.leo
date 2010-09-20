@@ -2,30 +2,33 @@
 <?xml-stylesheet ekr_test?>
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="5" clone_windows="0"/>
-<globals body_outline_ratio="0.22">
-	<global_window_position top="0" left="0" height="933" width="800"/>
+<globals body_outline_ratio="0.325830653805">
+	<global_window_position top="0" left="549" height="933" width="719"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
 <find_panel_settings/>
 <vnodes>
 <v t="zaril.20100919105245" a="E"><vh>Project</vh>
-<v t="zaril.20100919105245.1" a="E"><vh>research</vh>
+<v t="zaril.20100919105245.1"><vh>research</vh>
 <v t="zaril.20100919105245.2"><vh>explore sbuild</vh></v>
 <v t="zaril.20100919105245.3"><vh>explore pbuilder</vh></v>
 <v t="zaril.20100919105245.4"><vh>explore gdebi</vh></v>
 </v>
-<v t="zaril.20100919105245.5" a="ETV"><vh>design</vh></v>
-<v t="zaril.20100919105427"><vh>implementation</vh></v>
+<v t="zaril.20100919105245.5" a="E"><vh>design</vh></v>
+<v t="zaril.20100919105427" a="ETV"><vh>implementation</vh>
+<v t="zaril.20100919123407" a="E"><vh>setup a build chroot</vh>
+<v t="zaril.20100919172841"><vh>most common build dependencies</vh></v>
+</v>
+<v t="zaril.20100919135234"><vh>perform build manually</vh></v>
+<v t="zaril.20100919180049"><vh>cli code</vh></v>
+</v>
 </v>
 </vnodes>
 <tnodes>
 <t tx="zaril.20100919105245">@nocolor
 </t>
-<t tx="zaril.20100919105245.1">* TODOs
-finish design
-
-* SUMMARY
+<t tx="zaril.20100919105245.1">* SUMMARY
 types of build package relationships
     Build-Depends
     Build-Conflicts
@@ -212,18 +215,33 @@ deckdebuild [ -options ] /path/to/chroot
 show commands executed
     so user can reconstruct commands manually in case of error
 
+don't use fakeroot? (doesn't matter anyhow?)
+
+clean environment before chrooting?
+    so we don't get weird locale errors
+
+make deckdebuild suid?
+    if chroot is unescapable then this is secure if we don't allow satisfydepends-cmd
+        or maybe we only allow satisfydepends-cmd when not run suid
+
+    we can additionally restrict who is allowed to execute via group execution privileges
+
 * LOGIC  
 data flow
     input: package source directory
     output: 
         binary debs
         &lt;package-source-name&gt;.build
+
+export DEBIAN_FRONTEND="noninteractive"
     
 parse options
     option precedence
         cli option
         environment
         built-in default       
+
+check that we are running as root (we need root privileges)
 
 deck the build root
 install the build dependencies
@@ -251,6 +269,158 @@ unless -p, we delete the deck environment the package was built in
 </t>
 <t tx="zaril.20100919105427">roadmap
     perform package build manually
-    build </t>
+    cli code
+    build package
+    save build log
+    suid stuff
+        no satisfydepends
+        path should be set
+
+    
+
+
+</t>
+<t tx="zaril.20100919123407">location
+    /turnkey/fab/buildroots
+        e.g., /turnkey/fab/buildroots/jaunty
+
+has to be a real directory, not a deck
+
+do we have to mount proc and devpts and such?
+    lets start without it - if we have to, then we'll add some default code
+
+    the pbuilder default
+        USEPROC=yes
+        USEDEVPTS=yes
+        USEDEVFS=no
+        
+configuration after debootstrap
+    point sources.list to the proxy (127.0.0.1:9999)
+    apt-get install fakeroot build-essential debhelper cdbs dpatch autotools-dev
+
+install most common build dependencies
+
+build depedencies virtual packages
+    if you have preferences for virtual packages - install them yourself
+
+gotcha
+    LOCALE warnings from perl
+        reason is LANG="en_GB" setting
+            if we clean environment prior to chroot we won't have this problem
+                or just clean LANG
+
+    </t>
+<t tx="zaril.20100919135234">mkdir -p /var/lib/deckdebuild/{chroots,builds}/hello-debhelper
+deck /turnkey/fab/buildroots/jaunty/ /var/lib/deckdebuild/chroots/hello-debhelper/
+
+# satisfy dependencies
+/usr/lib/pbuilder/pbuilder-satisfydepends --chroot &lt;chroot&gt;
+
+# check if user exists
+getenv passwd &lt;username&gt; # from libc6 package~
+    exists: prints password entry and returns exitcode == 0
+    else: doesn't print anything, exitcode == 2    
+
+    alternative
+        grep -q ^&lt;username&gt;: /etc/passwd
+
+# add user
+useradd -m &lt;username&gt; # useradd is from the passwd package
+    alternatives
+        adduser (adduser package) 
+            is an interactive perl program
+        
+    if user already exists prints
+        useradd: user &lt;username&gt; exists # to stderr
+        exitcode == 9
+
+# delete any remnants
+chroot &lt;chroot&gt; su &lt;username&gt; -l -c "rm -rf &lt;package-basename&gt;"
+
+# copy package to chroot
+tar -C ../ -cvf - $(basename $(pwd)) | chroot &lt;chroot&gt; su &lt;username&gt; -l -c "tar -xvf -"
+
+# setup link in /var/lib/deckdebuild/builds
+
+# perform build
+chroot $c su &lt;username&gt; -l -c "cd hello-debhelper-2.1.1; dpkg-buildpackage -rfakeroot -uc -us -b"
+    successful build: exitcode = 1
+
+# get home directory
+HOMEDIR=$(chroot &lt;chroot&gt; su build -l -c pwd)
+
+cp &lt;chroot&gt;/$HOMEDIR/*.deb ../ # owned by invoking user
+
+deck -D /var/lib/deckdebuild/chroots/&lt;package&gt;
+
+</t>
+<t tx="zaril.20100919172841">cat /var/lib/apt/lists/*Sources | 
+    grep-dctrl -n -s Build-Depends  ""| 
+    perl -pe 's/\s*[,\|]\s*/\n/g' | 
+    perl -pe 's/\s*\(.*//; s/^\s*//; s/\[.*//' | sort | uniq -c |sort -n -r
+
+  10257 debhelper
+   2157 cdbs
+   1338 dpatch
+   1330 autotools-dev
+    850 libx11-dev
+    736 libgtk2.0-dev
+    597 pkg-config
+    591 zlib1g-dev
+    488 autoconf
+    477 gettext
+
+    458 libxt-dev
+    449 libncurses5-dev
+    437 perl
+    397 flex
+    394 bison
+    390 libtool
+    381 libglib2.0-dev
+    375 libxext-dev
+    355 quilt
+    344 libxml2-dev
+    324 po-debconf
+    323 x-dev
+    322 kdelibs4-dev
+
+    316 automake1.9
+    306 python-all-dev
+    290 libssl-dev
+    265 python-central
+    260 libxpm-dev
+    258 libxml-parser-perl
+    246 texinfo
+    241 python-support
+    241 python-dev
+    237 libpng12-dev
+    236 libgnomeui-dev
+    234 libsdl1.2-dev
+    233 libgtk1.2-dev
+    227 libreadline5-dev
+    221 dpkg-dev
+    218 xutils
+    218 libjpeg62-dev
+    205 libglade2-dev
+    204 docbook-to-man
+    202 libqt3-mt-dev
+    178 intltool
+    175 libxmu-dev
+    172 libxaw7-dev</t>
+<t tx="zaril.20100919180049">* CLI SYNTAX
+deckdebuild [ -options ] /path/to/chroot
+    -p --preserve-build
+        DECKDEBUILD_PRESERVE_BUILD=0
+
+    -u --user &lt;username&gt;
+        DECKDEBUILD_USER="build"
+
+    -r --root-cmd &lt;rootcmd&gt;
+        DECKDEBUILD_ROOT_CMD="fakeroot"
+
+    --satisfydepends-cmd /path/to/prog
+        DECKDEBUILD_SATISFYDEPENDS_CMD=/usr/lib/pbuilder/pbuilder-satisfydepends
+
+</t>
 </tnodes>
 </leo_file>

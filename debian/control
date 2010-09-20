@@ -7,6 +7,6 @@ Standards-Version: 3.6.1
 
 Package: deckdebuild
 Architecture: any
-Depends: python (>= 2.4)
-Description: <insert up to 60 chars short description>
- <insert long description, indented with spaces>
+Depends: python (>= 2.4), pbuilder, deck
+Description: build a Debian package in a decked chroot
+

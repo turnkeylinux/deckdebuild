@@ -16,12 +16,13 @@
 <v t="zaril.20100919105245.4"><vh>explore gdebi</vh></v>
 </v>
 <v t="zaril.20100919105245.5" a="E"><vh>design</vh></v>
-<v t="zaril.20100919105427" a="ETV"><vh>implementation</vh>
+<v t="zaril.20100919105427" a="E"><vh>implementation</vh>
 <v t="zaril.20100919123407" a="E"><vh>setup a build chroot</vh>
 <v t="zaril.20100919172841"><vh>most common build dependencies</vh></v>
 </v>
 <v t="zaril.20100919135234"><vh>perform build manually</vh></v>
 <v t="zaril.20100919180049"><vh>cli code</vh></v>
+<v t="zaril.20100920101348" a="TV"><vh>build package</vh></v>
 </v>
 </v>
 </vnodes>
@@ -270,14 +271,13 @@ unless -p, we delete the deck environment the package was built in
 <t tx="zaril.20100919105427">roadmap
     perform package build manually
     cli code
-    build package
     save build log
+    destroy deck
     suid stuff
         no satisfydepends
         path should be set
 
     
-
 
 </t>
 <t tx="zaril.20100919123407">location
@@ -420,6 +420,19 @@ deckdebuild [ -options ] /path/to/chroot
 
     --satisfydepends-cmd /path/to/prog
         DECKDEBUILD_SATISFYDEPENDS_CMD=/usr/lib/pbuilder/pbuilder-satisfydepends
+
+</t>
+<t tx="zaril.20100920101348">LOGIC
+    see manual build`
+
+Q: how do I identify packages?
+A:
+parse the control file and grab the names of all packages that are supposed to be built
+    copy any deb that starts with &lt;package&gt;_
+
+alternatives
+    copy all debs
+    parse the changes file and copy only the debs
 
 </t>
 </tnodes>

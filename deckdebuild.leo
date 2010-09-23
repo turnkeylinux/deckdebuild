@@ -23,7 +23,8 @@
 <v t="zaril.20100919135234" a="M"><vh>perform build manually</vh></v>
 <v t="zaril.20100919180049" a="M"><vh>cli code</vh></v>
 <v t="zaril.20100920101348" a="M"><vh>build package</vh></v>
-<v t="zaril.20100923030828" a="MTV"><vh>destroy deck unless build fails or requested</vh></v>
+<v t="zaril.20100923030828" a="M"><vh>destroy deck unless build fails or requested</vh></v>
+<v t="zaril.20100923031435" a="MTV"><vh>run as suid</vh></v>
 </v>
 </v>
 </vnodes>
@@ -437,5 +438,14 @@ alternatives
 
 </t>
 <t tx="zaril.20100923030828"></t>
+<t tx="zaril.20100923031435">logic
+    no satisfydepends should be allowed to set in suid mode
+    files should be copied as user
+        parent directory should be writeable by invoking user
+            e.g., don't write to directory owned by root
+
+
+
+    </t>
 </tnodes>
 </leo_file>

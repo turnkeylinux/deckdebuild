@@ -47,7 +47,10 @@ def parse_bool(val):
         return True
 
     return None
-        
+
+def is_suid():
+    return os.getuid() != os.geteuid()
+
 def main():
     conf = {}
     for opt in ('preserve_build', 'user', 'root_cmd', 'satisfydepends_cmd'):
@@ -55,6 +58,9 @@ def main():
 
         if optenv in os.environ:
             val = os.environ[optenv]
+
+            if is_suid() and opt == 'satisfydepends_cmd':
+                continue
             
             if opt == 'preserve_build':
                 val = parse_bool(val)
@@ -82,6 +88,9 @@ def main():
         # transform empty arguments to true
         if val == '': 
             val = True
+
+        if is_suid() and opt == '--satisfydepends-cmd':
+            fatal("won't allow --satisfydepends_cmd while running suid")
             
         if not opt.startswith("--"):
             opt = shortsmap[opt]

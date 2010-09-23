@@ -62,6 +62,9 @@ def deckdebuild(path, buildroot,
     package_dir = basename(realpath(path))
     chroot = join(paths.chroots, package_dir)
 
+    orig_uid = os.getuid()
+    os.setuid(0)
+    
     # delete deck if it already exists
     if exists(chroot):
         system("deck -D", chroot)
@@ -100,7 +103,7 @@ def deckdebuild(path, buildroot,
     finally:
         trap.close()
 
-    # write build log
+    os.seteuid(orig_uid)
     output = trap.std.read()
     file("../%s.build" % package_dir, "w").write(output)
 
@@ -118,7 +121,9 @@ def deckdebuild(path, buildroot,
             shutil.copyfile(src, dst)
 
     if not preserve_build:
+        os.seteuid(0)
         system("deck -D", chroot)
         os.remove(build_link)
-        
+
     os.chdir(orig_cwd)
+    os.setreuid(orig_uid, 0)

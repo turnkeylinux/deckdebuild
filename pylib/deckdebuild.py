@@ -49,7 +49,7 @@ def get_control_packages(controlfile="debian/control"):
              for line in file(controlfile).readlines()
              if re.match(r'^Package:', line, re.I) ]
 
-def deckdebuild(path, buildroot,
+def deckdebuild(path, buildroot, output_dir,
                 preserve_build=False, user='build', root_cmd='fakeroot',
                 satisfydepends_cmd='/usr/lib/pbuilder/pbuilder-satisfydepends'):
 
@@ -105,7 +105,7 @@ def deckdebuild(path, buildroot,
 
     os.seteuid(orig_uid)
     output = trap.std.read()
-    file("../%s.build" % package_dir, "w").write(output)
+    file("%s/%s.build" % (output_dir, package_dir), "w").write(output)
 
     # copy packages
     packages = get_control_packages()
@@ -116,7 +116,7 @@ def deckdebuild(path, buildroot,
 
         if fname.split("_")[0] in packages:
             src = join(build_dir, fname)
-            dst = join("../", fname)
+            dst = join(output_dir, fname)
             
             shutil.copyfile(src, dst)
 

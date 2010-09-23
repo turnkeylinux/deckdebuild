@@ -1,6 +1,8 @@
 #!/usr/bin/python
 """build a Debian package in a decked chroot
 
+Output dir defaults to ../
+
 Resolution order for options:
 1) command line (highest precedence)
 2) environment variable
@@ -33,7 +35,7 @@ import deckdebuild
 
 @help.usage(__doc__)
 def usage():
-    print >> sys.stderr, "Syntax: %s [-options] /path/to/buildroot" % sys.argv[0]
+    print >> sys.stderr, "Syntax: %s [-options] /path/to/buildroot [ /path/to/output-dir ]" % sys.argv[0]
 
 def fatal(s):
     print >> sys.stderr, "error: " + str(s)
@@ -101,13 +103,17 @@ def main():
     if not args:
         usage()
 
-    if len(args) != 1:
+    if len(args) < 1:
         usage("bad number of arguments")
 
     buildroot = args[0]
+    try:
+        outputdir = args[1]
+    except IndexError:
+        outputdir = "../"
 
     try:
-        deckdebuild.deckdebuild(os.getcwd(), buildroot, **conf)
+        deckdebuild.deckdebuild(os.getcwd(), buildroot, outputdir, **conf)
     except deckdebuild.Error, e:
         fatal(e)
 

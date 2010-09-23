@@ -116,5 +116,9 @@ def deckdebuild(path, buildroot,
             dst = join("../", fname)
             
             shutil.copyfile(src, dst)
+
+    if not preserve_build:
+        system("deck -D", chroot)
+        os.remove(build_link)
         
     os.chdir(orig_cwd)

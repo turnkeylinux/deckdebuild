@@ -20,9 +20,10 @@
 <v t="zaril.20100919123407" a="E"><vh>setup a build chroot</vh>
 <v t="zaril.20100919172841"><vh>most common build dependencies</vh></v>
 </v>
-<v t="zaril.20100919135234"><vh>perform build manually</vh></v>
-<v t="zaril.20100919180049"><vh>cli code</vh></v>
-<v t="zaril.20100920101348" a="TV"><vh>build package</vh></v>
+<v t="zaril.20100919135234" a="M"><vh>perform build manually</vh></v>
+<v t="zaril.20100919180049" a="M"><vh>cli code</vh></v>
+<v t="zaril.20100920101348" a="M"><vh>build package</vh></v>
+<v t="zaril.20100923030828" a="MTV"><vh>destroy deck unless build fails or requested</vh></v>
 </v>
 </v>
 </vnodes>
@@ -435,5 +436,6 @@ alternatives
     parse the changes file and copy only the debs
 
 </t>
+<t tx="zaril.20100923030828"></t>
 </tnodes>
 </leo_file>

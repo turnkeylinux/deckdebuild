@@ -1,12 +1,13 @@
 from os.path import *
 
 import os
-import re
 import shutil
 import commands
 
 import stdtrap
 from paths import Paths
+
+import debsource
 
 class Error(Exception):
     pass
@@ -44,11 +45,6 @@ class _DeckDebuildPaths(Paths):
 
 paths = _DeckDebuildPaths()
 
-def get_control_packages(controlfile="debian/control"):
-    return [ re.sub(r'^.*?:', '', line).strip()
-             for line in file(controlfile).readlines()
-             if re.match(r'^Package:', line, re.I) ]
-
 def deckdebuild(path, buildroot, output_dir,
                 preserve_build=False, user='build', root_cmd='fakeroot',
                 satisfydepends_cmd='/usr/lib/pbuilder/pbuilder-satisfydepends'):
@@ -56,10 +52,9 @@ def deckdebuild(path, buildroot, output_dir,
     if not isdir(buildroot):
         raise Error("buildroot `%s' is not a directory" % buildroot)
 
-    orig_cwd = os.getcwd()
-    os.chdir(path)
-
-    package_dir = basename(realpath(path))
+    version = debsource.get_version(path)
+    package_dir = "%s-%s" % (debsource.get_control_fields(path)['Source'], version)
+    
     chroot = join(paths.chroots, package_dir)
 
     orig_uid = os.getuid()
@@ -82,9 +77,12 @@ def deckdebuild(path, buildroot, output_dir,
     if not userent:
         system("chroot", chroot, "useradd", "-m", user)
 
+    orig_cwd = os.getcwd()
+    os.chdir(path)
     # transfer package over to chroot
-    system("tar -C ../ -cf - %s | chroot %s su %s -l -c 'tar -xf -'" % 
-           mkargs(package_dir, chroot, user))
+    system("tar -cf - . | chroot %s su %s -l -c \"mkdir -p %s && tar -C %s -xf -\"" % 
+           mkargs(chroot, user, package_dir, package_dir))
+    os.chdir(orig_cwd)
 
     # create link to build directory in chroot
     user_home = getoutput("chroot %s su %s -l -c 'pwd'" % mkargs(chroot, user))
@@ -108,7 +106,7 @@ def deckdebuild(path, buildroot, output_dir,
     file("%s/%s.build" % (output_dir, package_dir), "w").write(output)
 
     # copy packages
-    packages = get_control_packages()
+    packages = debsource.get_packages(path)
 
     for fname in os.listdir(build_dir):
         if not fname.endswith(".deb"):
@@ -125,5 +123,4 @@ def deckdebuild(path, buildroot, output_dir,
         system("deck -D", chroot)
         os.remove(build_link)
 
-    os.chdir(orig_cwd)
     os.setreuid(orig_uid, 0)

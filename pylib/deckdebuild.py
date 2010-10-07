@@ -38,10 +38,9 @@ def getoutput(command):
     return o
 
 class _DeckDebuildPaths(Paths):
+    files = ['chroots', 'builds']
     def __init__(self, path="/var/lib/deckdebuild"):
-        Paths.__init__(self, path,
-                       ['chroots',
-                        'builds'])
+        Paths.__init__(self, path)
 
 paths = _DeckDebuildPaths()
 

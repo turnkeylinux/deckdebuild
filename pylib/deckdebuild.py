@@ -52,9 +52,9 @@ def deckdebuild(path, buildroot, output_dir,
         raise Error("buildroot `%s' is not a directory" % buildroot)
 
     version = debsource.get_version(path)
-    package_dir = "%s-%s" % (debsource.get_control_fields(path)['Source'], version)
+    source_fullname = "%s-%s" % (debsource.get_control_fields(path)['Source'], version)
     
-    chroot = join(paths.chroots, package_dir)
+    chroot = join(paths.chroots, source_fullname)
 
     orig_uid = os.getuid()
     os.setuid(0)
@@ -80,19 +80,19 @@ def deckdebuild(path, buildroot, output_dir,
     os.chdir(path)
     # transfer package over to chroot
     system("tar -cf - . | chroot %s su %s -l -c \"mkdir -p %s && tar -C %s -xf -\"" % 
-           mkargs(chroot, user, package_dir, package_dir))
+           mkargs(chroot, user, source_fullname, source_fullname))
     os.chdir(orig_cwd)
 
     # create link to build directory in chroot
     user_home = getoutput("chroot %s su %s -l -c 'pwd'" % mkargs(chroot, user))
     
     build_dir = chroot + user_home
-    build_link = join(paths.builds, package_dir)
+    build_link = join(paths.builds, source_fullname)
     symlink(build_dir, build_link)
     
     # build package in chroot
     build_cmd = "cd %s; dpkg-buildpackage -uc -us -b -r%s" % \
-                (package_dir, root_cmd)
+                (source_fullname, root_cmd)
     
     trap = stdtrap.UnitedStdTrap(transparent=True)
     try:
@@ -102,7 +102,7 @@ def deckdebuild(path, buildroot, output_dir,
 
     os.seteuid(orig_uid)
     output = trap.std.read()
-    file("%s/%s.build" % (output_dir, package_dir), "w").write(output)
+    file("%s/%s.build" % (output_dir, source_fullname), "w").write(output)
 
     # copy packages
     packages = debsource.get_packages(path)

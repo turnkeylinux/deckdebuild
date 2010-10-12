@@ -6,7 +6,8 @@ Output dir defaults to ../
 Resolution order for options:
 1) command line (highest precedence)
 2) environment variable
-3) built-in default (lowest precedence)
+3) configuration file
+4) built-in default (lowest precedence)
 
 Options:
   -p --preserve-build		don't remove build deck after build
@@ -30,8 +31,16 @@ Privileged options (root only):
   --vardir <path>		var data path
 				environment: DECKDEBUILD_VARDIR
 				default: /var/lib/deckdebuild
+
+Configuration file (/etc/deckdebuild.conf):
+  <option> <value>
+	e.g.,
+	  	user build
+		preserve-build true
+
 """
 import os
+import re
 import sys
 import help
 import getopt
@@ -63,10 +72,36 @@ def is_privileged_option(opt):
         return True
 
     return False
-    
-def main():
+
+OPTS = ('preserve_build', 'user', 'root_cmd', 'satisfydepends_cmd', 'vardir')    
+
+def parse_conf_file(path="/etc/deckdebuild.conf"):
+    try:
+        fh = file(path)
+    except IOError:
+        return {}
+
     conf = {}
-    for opt in ('preserve_build', 'user', 'root_cmd', 'satisfydepends_cmd', 'vardir'):
+    for line in fh.readlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        opt, val = re.split(r'\s+', line)
+        opt = opt.replace("-", "_")
+        if opt not in OPTS:
+            fatal("unknown configuration file option `%s'" % opt)
+            
+        if opt == 'preserve_build':
+            val = parse_bool(val)
+
+        conf[opt] = val
+    
+    return conf
+        
+def main():
+    conf = parse_conf_file()
+    for opt in OPTS:
         optenv = "DECKDEBUILD_" + opt.upper()
 
         if optenv in os.environ:

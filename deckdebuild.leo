@@ -25,7 +25,8 @@
 <v t="zaril.20100920101348" a="M"><vh>build package</vh></v>
 <v t="zaril.20100923030828" a="M"><vh>destroy deck unless build fails or requested</vh></v>
 <v t="zaril.20100923031435" a="M"><vh>run as suid</vh></v>
-<v t="zaril.20101012141527" a="TV"><vh>add configurable vardir option (root-only)</vh></v>
+<v t="zaril.20101012141527"><vh>add configurable vardir option (root-only)</vh></v>
+<v t="zaril.20101012141527.1" a="TV"><vh>add a configuration file</vh></v>
 </v>
 </v>
 </vnodes>
@@ -459,5 +460,15 @@ vardir
 tmpdir
 
 </t>
+<t tx="zaril.20101012141527.1">TODO:
+    add cli reference with example
+    function that parses configuration file
+
+format
+    &lt;option&gt; &lt;value&gt;
+    e.g.,
+        user build
+
+    </t>
 </tnodes>
 </leo_file>

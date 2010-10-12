@@ -21,10 +21,15 @@ Options:
 				environment: DECKDEBUILD_ROOT_CMD
 				default: `fakeroot'
 
+Privileged options (root only):
+
   --satisfydepends-cmd <prog>	program used to satisfy build dependencies
 				environment: DECKDEBUILD_SATISFYDEPENDS_CMD
 				default: /usr/lib/pbuilder/pbuilder-satisfydepends
 
+  --vardir <path>		var data path
+				environment: DECKDEBUILD_VARDIR
+				default: /var/lib/deckdebuild
 """
 import os
 import sys
@@ -53,15 +58,21 @@ def parse_bool(val):
 def is_suid():
     return os.getuid() != os.geteuid()
 
+def is_privileged_option(opt):
+    if opt in ('satisfydepends_cmd', 'vardir'):
+        return True
+
+    return False
+    
 def main():
     conf = {}
-    for opt in ('preserve_build', 'user', 'root_cmd', 'satisfydepends_cmd'):
+    for opt in ('preserve_build', 'user', 'root_cmd', 'satisfydepends_cmd', 'vardir'):
         optenv = "DECKDEBUILD_" + opt.upper()
 
         if optenv in os.environ:
             val = os.environ[optenv]
 
-            if is_suid() and opt == 'satisfydepends_cmd':
+            if is_suid() and is_privileged_option(opt):
                 continue
             
             if opt == 'preserve_build':
@@ -75,7 +86,8 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], 'pu:r:', ['preserve-build',
                                                            'user=',
                                                            'root-cmd=',
-                                                           'satisfydepends-cmd='])
+                                                           'satisfydepends-cmd=',
+                                                           'vardir='])
     except getopt.GetoptError, e:
         usage(e)
 
@@ -91,8 +103,8 @@ def main():
         if val == '': 
             val = True
 
-        if is_suid() and opt == '--satisfydepends-cmd':
-            fatal("won't allow --satisfydepends_cmd while running suid")
+        if is_suid() and is_privileged_option(opt[2:].replace("-", "_")):
+            fatal("privileged options not allowed while running suid (must run as root)")
             
         if not opt.startswith("--"):
             opt = shortsmap[opt]

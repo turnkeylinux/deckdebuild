@@ -37,17 +37,16 @@ def getoutput(command):
     (s,o) = commands.getstatusoutput(command)
     return o
 
-class _DeckDebuildPaths(Paths):
+class DeckDebuildPaths(Paths):
     files = ['chroots', 'builds']
-    def __init__(self, path="/var/lib/deckdebuild"):
-        Paths.__init__(self, path)
-
-paths = _DeckDebuildPaths()
 
 def deckdebuild(path, buildroot, output_dir,
                 preserve_build=False, user='build', root_cmd='fakeroot',
-                satisfydepends_cmd='/usr/lib/pbuilder/pbuilder-satisfydepends'):
+                satisfydepends_cmd='/usr/lib/pbuilder/pbuilder-satisfydepends',
+                vardir='/var/lib/deckdebuild'):
 
+    paths = DeckDebuildPaths(vardir)
+    
     if not isdir(buildroot):
         raise Error("buildroot `%s' is not a directory" % buildroot)
 

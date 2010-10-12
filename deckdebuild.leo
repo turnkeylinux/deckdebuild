@@ -3,7 +3,7 @@
 <leo_file>
 <leo_header file_format="2" tnodes="0" max_tnode_index="5" clone_windows="0"/>
 <globals body_outline_ratio="0.325830653805">
-	<global_window_position top="0" left="588" height="933" width="682"/>
+	<global_window_position top="0" left="590" height="933" width="682"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -15,7 +15,7 @@
 <v t="zaril.20100919105245.3"><vh>explore pbuilder</vh></v>
 <v t="zaril.20100919105245.4"><vh>explore gdebi</vh></v>
 </v>
-<v t="zaril.20100919105245.5" a="ETV"><vh>design</vh></v>
+<v t="zaril.20100919105245.5" a="E"><vh>design</vh></v>
 <v t="zaril.20100919105427" a="E"><vh>implementation</vh>
 <v t="zaril.20100919123407" a="E"><vh>setup a build chroot</vh>
 <v t="zaril.20100919172841"><vh>most common build dependencies</vh></v>
@@ -25,6 +25,7 @@
 <v t="zaril.20100920101348" a="M"><vh>build package</vh></v>
 <v t="zaril.20100923030828" a="M"><vh>destroy deck unless build fails or requested</vh></v>
 <v t="zaril.20100923031435" a="M"><vh>run as suid</vh></v>
+<v t="zaril.20101012141527" a="TV"><vh>add configurable vardir option (root-only)</vh></v>
 </v>
 </v>
 </vnodes>
@@ -302,6 +303,9 @@ configuration after debootstrap
 
 install most common build dependencies
 
+unless your sources.list contains a private repository for turnkey build components
+    manually build and install autoversion into the buildroot
+
 build depedencies virtual packages
     if you have preferences for virtual packages - install them yourself
 
@@ -447,5 +451,13 @@ alternatives
 
 
     </t>
+<t tx="zaril.20101012141527">option to set an alternative to the default /var/lib/deckdebuild
+
+Q: what do we call it??
+
+vardir
+tmpdir
+
+</t>
 </tnodes>
 </leo_file>

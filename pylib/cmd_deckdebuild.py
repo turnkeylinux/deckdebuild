@@ -118,7 +118,7 @@ def main():
             conf[opt] = val
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'pu:r:', ['preserve-build',
+        opts, args = getopt.gnu_getopt(sys.argv[1:], 'pu:r:', ['preserve-build',
                                                            'user=',
                                                            'root-cmd=',
                                                            'satisfydepends-cmd=',

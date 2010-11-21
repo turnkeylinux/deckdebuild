@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet ekr_test?>
 <leo_file>
-<leo_header file_format="2" tnodes="0" max_tnode_index="5" clone_windows="0"/>
+<leo_header file_format="2" tnodes="0" max_tnode_index="9" clone_windows="0"/>
 <globals body_outline_ratio="0.325830653805">
-	<global_window_position top="0" left="590" height="933" width="682"/>
+	<global_window_position top="45" left="76" height="933" width="682"/>
 	<global_log_window_position top="0" left="0" height="0" width="0"/>
 </globals>
 <preferences/>
@@ -26,7 +26,14 @@
 <v t="zaril.20100923030828" a="M"><vh>destroy deck unless build fails or requested</vh></v>
 <v t="zaril.20100923031435" a="M"><vh>run as suid</vh></v>
 <v t="zaril.20101012141527"><vh>add configurable vardir option (root-only)</vh></v>
-<v t="zaril.20101012141527.1" a="TV"><vh>add a configuration file</vh></v>
+<v t="zaril.20101012141527.1"><vh>add a configuration file</vh></v>
+<v t="zaril.20101121122918" a="ETV"><vh>bug: deckdebuild won't build a package with an epoch</vh>
+<v t="zaril.20101121122918.1"><vh>bug: useraufs-mount fails to mount branches with : in their path</vh>
+<v t="zaril.20101121122918.2"><vh>bug: mount -t aufs won't work with paths that have ':' in them</vh>
+<v t="zaril.20101121122918.3"><vh>bug: mount -t aufs fails on mount paths with : in them</vh></v>
+</v>
+</v>
+</v>
 </v>
 </v>
 </vnodes>
@@ -470,5 +477,43 @@ format
         user build
 
     </t>
+<t tx="zaril.20101121122918">IDEAS
+    filter out epochs
+
+
+</t>
+<t tx="zaril.20101121122918.1">GOTCHA: cli doesn't support ':' in names?
+
+IDEAS
+    support escaping of : character?
+    change the character to something that can't be used in filenames
+    change the cli so that branches can be specified as arguments?
+mount -t aufs -o dirs=a:b none c
+
+test:
+
+
+Q: what uses useraufs?
+A:
+    sumo
+    deck
+
+</t>
+<t tx="zaril.20101121122918.2">WORKAROND: create a temporary symbolic link to the problem directory
+
+IDEA  
+    sequence of append commands?
+        wouldn't work if all branches have ':' in them
+</t>
+<t tx="zaril.20101121122918.3">SUMMARY: 
+    no know fix
+
+    this is probably due to a shell script bug in /sbin/mount.aufs
+
+        may have already been fixed?
+
+WORKAROUND:
+    ignore epochs in deckdebuild
+</t>
 </tnodes>
 </leo_file>

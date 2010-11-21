@@ -40,6 +40,11 @@ def getoutput(command):
 class DeckDebuildPaths(Paths):
     files = ['chroots', 'builds']
 
+def get_source_dir(name, version):
+    if ':' in version:
+        version = version.split(':', 1)[1]
+    return name + "-" + version
+        
 def deckdebuild(path, buildroot, output_dir,
                 preserve_build=False, user='build', root_cmd='fakeroot',
                 satisfydepends_cmd='/usr/lib/pbuilder/pbuilder-satisfydepends',
@@ -52,7 +57,8 @@ def deckdebuild(path, buildroot, output_dir,
 
     source_name = debsource.get_control_fields(path)['Source']
     source_version = debsource.get_version(path)
-    source_dir = "%s-%s" % (source_name, source_version)
+    
+    source_dir = get_source_dir(source_name, source_version)
     
     chroot = join(paths.chroots, source_dir)
 

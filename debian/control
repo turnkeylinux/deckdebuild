@@ -7,6 +7,6 @@ Standards-Version: 3.6.1
 
 Package: deckdebuild
 Architecture: any
-Depends: python (>= 2.4), pbuilder, deck
+Depends: python (>= 2.4), turnkey-pylib, pbuilder, deck
 Description: build a Debian package in a decked chroot
 

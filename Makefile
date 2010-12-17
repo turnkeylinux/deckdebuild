@@ -1,5 +1,5 @@
 # standard Python project Makefile
-progname=deckdebuild
+progname=$(shell awk '/^Source/ {print $$2}' debian/control)
 name=
 
 prefix=/usr/local
@@ -9,6 +9,8 @@ PATH_BIN=$(prefix)/bin
 PATH_INSTALL=$(prefix)/lib/$(progname)
 PATH_INSTALL_LIB=$(PATH_INSTALL)/pylib
 PATH_INSTALL_LIBEXEC=$(PATH_INSTALL)/libexec
+PATH_INSTALL_SHARE=$(prefix)/share/$(progname)
+PATH_INSTALL_CONTRIB=$(PATH_INSTALL_SHARE)/contrib
 
 TRUEPATH_INSTALL=$(shell echo $(PATH_INSTALL) | sed -e 's/debian\/$(progname)//g')
 
@@ -27,22 +29,38 @@ all:
 	@echo "make uninstall prefix=<dirpath>"
 	@echo
 	@echo "make clean"
-	@echo "make dist                      # create distribution tarball"
-	@echo "make gitdist                   # create git distribution tarball"
+	@echo "make dist                       # create distribution tarball"
+	@echo "make gitdist                    # create git distribution tarball"
 	@echo
-	@echo "make rename name=<project-name>  # initialize project"
-	@echo "make updatelinks               # update toolkit command links"
+ifeq ($(progname),pyproject)
+	@echo "make init name=<project-name>   # initialize project"
+else
+	@echo "make rename name=<project-name> # initialize project"
+endif
+	@echo "make updatelinks                # update toolkit command links"
 	@echo 
 
 rename:
 ifeq ($(progname),pyproject)
-	@echo error: you need to make rename first
+	@echo error: you need to make init first
 else
 ifeq ($(name),)
 	@echo error: name not set
 else
 	scripts/rename.sh $(progname) $(name)
 endif
+endif
+
+init: clean
+ifeq ($(name),)
+	@echo error: name not set
+else
+	@if [ -x scripts/init.sh ]; then \
+		scripts/rename.sh $(progname) $(name); \
+		scripts/init.sh $(name); \
+	else \
+		echo error: already initialized; \
+	fi
 endif
 
 updatelinks:
@@ -63,6 +81,7 @@ execproxy: execproxy.c
 
 uninstall:
 	rm -rf $(PATH_INSTALL)
+	rm -rf $(PATH_INSTALL_SHARE)
 	rm -f $(PATH_BIN)/$(progname)
 
 	# delete links from PATH_BIN
@@ -75,6 +94,13 @@ _install: execproxy
 
 	install -d $(PATH_BIN) $(PATH_INSTALL) $(PATH_INSTALL_LIB) $(PATH_INSTALL_LIBEXEC)
 
+	# if contrib exists
+	contrib=$$(echo contrib/*); \
+	if [ "$$contrib" != "contrib/*" ]; then \
+		mkdir -p $(PATH_INSTALL_CONTRIB); \
+		cp -a contrib/* $(PATH_INSTALL_CONTRIB); \
+	fi
+
 	install -m 644 pylib/*.pyo $(PATH_INSTALL_LIB)
 	-install -m 755 libexec/* $(PATH_INSTALL_LIBEXEC)
 
@@ -82,9 +108,14 @@ _install: execproxy
 	([ -f debian/changelog ] && (dpkg-parsechangelog | awk '/^Version/ {print $$2 }') || \
 		autoversion HEAD) > $(PATH_INSTALL)/version.txt
 
+	for f in $(progname)*; do \
+		if [ -x $$f ]; then \
+			cp -P $$f $(PATH_BIN); \
+		fi; \
+	done
 	rm -f $(PATH_BIN)/$(progname)
+#	install -m 755 _$(progname) $(PATH_BIN)/$(progname)
 	install -m 4755 _$(progname) $(PATH_BIN)/$(progname) # install SUID 
-	-cp -P $(progname)-* $(PATH_BIN)	
 
 install-nodoc: pycompile-nodoc _install
 

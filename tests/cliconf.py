@@ -16,6 +16,13 @@ class Opt:
         for attrname, attr in vars(self).items():
             yield attrname, attr
 
+    def longopt(self):
+        if self.name:
+            return self.name.replace("_", "-")
+
+        return ""
+    longopt = property(longopt)
+
 class BoolOpt(Opt):
     pass
 
@@ -64,7 +71,7 @@ class CliConf:
 
         opts = cls.Opts()
         for opt in opts:
-            longopt = opt.name
+            longopt = opt.longopt
             shortopt = opt.short
 
             if not is_bool(opt):
@@ -96,7 +103,9 @@ class CliConf:
         cli_opts, args = getopt.gnu_getopt(args, shortopts, longopts)
         for cli_opt, cli_val in cli_opts:
             for opt in opts:
-                if cli_opt in ("--" + opt.name, "-" + opt.short):
+                if cli_opt in ("--" + opt.longopt,
+                               "-" + opt.short):
+
                     if is_bool(opt):
                         opt.val = True
                     else:
@@ -107,6 +116,7 @@ class CliConf:
 class TestOpts(Opts):
     bool = BoolOpt(short="b", default=False)
     val = Opt(short="v")
+    a_b = Opt()
 
 class TestCliConf(CliConf):
     __doc__ = __doc__

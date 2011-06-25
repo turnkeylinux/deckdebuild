@@ -28,7 +28,7 @@ import copy
 import types
 import re
 
-class Opt:
+class Opt(object):
     def __init__(self, desc=None, short="", rootonly=False, default=None):
         self.desc = desc
         self.short = short
@@ -49,7 +49,29 @@ class Opt:
     longopt = property(longopt)
 
 class BoolOpt(Opt):
-    pass
+    @staticmethod
+    def parse_bool(val):
+        if val.lower() in ('', '0', 'no', 'false'):
+            return False
+
+        if val.lower() in ('1', 'yes', 'true'):
+            return True
+
+        raise Error("illegal value for bool (%s)" % val)
+
+    def set_val(self, val):
+        if val not in (None, True, False):
+            val = self.parse_bool(str(val))
+            
+        self._val = val
+
+    def get_val(self):
+        if hasattr(self, '_val'):
+            return self._val
+
+        return None
+
+    val = property(get_val, set_val)
 
 def is_bool(opt):
     return isinstance(opt, BoolOpt)
@@ -105,16 +127,6 @@ class CliConf:
     file_path = None
 
     @staticmethod
-    def parse_bool(val):
-        if val.lower() in ('', '0', 'no', 'false'):
-            return False
-
-        if val.lower() in ('1', 'yes', 'true'):
-            return True
-
-        return None
-
-    @staticmethod
     def _cli_getopt(args, opts):
         # make arguments for getopt.gnu_getopt
         longopts = []
@@ -162,11 +174,7 @@ class CliConf:
                     raise Error("unknown configuration file option `%s'" %
                                 name)
 
-                opt = opts[name]
-                if is_bool(opt):
-                    opt.val = parse_bool(val)
-                else:
-                    opt.val = val
+                opts[name].val = val
 
         # set options that are set in the environment
         if cls.env_path is not None:
@@ -177,12 +185,7 @@ class CliConf:
                 if optenv not in os.environ:
                     continue
 
-                val = os.environ[optenv]
-
-                if is_bool(opt):
-                    val = cls.parse_bool(val)
-
-                opt.val = val
+                opt.val = os.environ[optenv]
 
         if not args:
             args = sys.argv[1:]

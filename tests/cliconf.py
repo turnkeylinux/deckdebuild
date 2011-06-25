@@ -12,6 +12,8 @@ Usage::
         simple_bool = False
 
     class MyCliConf(CliConf):
+        "Syntax: $AV0 [-options] <arg>"
+
         Opts = MyOpts
         env_path = "MYPROG_"
         file_path = "/etc/myprog.conf"
@@ -27,6 +29,7 @@ import getopt
 import copy
 import types
 import re
+import string
 
 class Opt(object):
     def __init__(self, desc=None, short="", protect=False, default=None):
@@ -130,14 +133,16 @@ class Error(Exception):
     pass
 
 class CliConf:
+    Error = Error
+
     env_path = None
     file_path = None
 
-    @staticmethod
-    def _cli_getopt(args, opts):
+    @classmethod
+    def _cli_getopt(cls, args, opts):
         # make arguments for getopt.gnu_getopt
-        longopts = []
-        shortopts = ""
+        longopts = ['help']
+        shortopts = "h"
 
         for opt in opts:
             longopt = opt.longopt
@@ -152,7 +157,16 @@ class CliConf:
             longopts.append(longopt)
             shortopts += shortopt
 
-        return getopt.gnu_getopt(args, shortopts, longopts)
+        try:
+            opts, args = getopt.gnu_getopt(args, shortopts, longopts)
+        except getopt.GetoptError, e:
+            raise Error(e)
+
+        for opt, val in opts:
+            if opt in ('-h', '--help'):
+                cls.usage()
+
+        return opts, args
 
     @staticmethod
     def _parse_conf_file(path):
@@ -216,17 +230,103 @@ class CliConf:
 
         return opts, args
 
+    @classmethod
+    def usage(cls, err=None):
+        if err:
+            print >> sys.stderr, "error: " + str(err)
+
+        tpl = string.Template(cls.__doc__)
+        usage = tpl.substitute(AV0=os.path.basename(sys.argv[0]))
+
+        print >> sys.stderr, usage.strip()
+
+        order = ['comand line (highest precedence)']
+        if cls.env_path:
+            order.append('environment variable')
+
+        if cls.file_path:
+            order.append('configuration file (%s)' % cls.file_path)
+
+        order.append('built-in default (lowest precedence)')
+
+        buf = "\n"
+        buf += "Resolution order for options:\n"
+
+        for i in range(1, len(order) + 1):
+            buf += "%d) %s\n" % (i, order[i - 1])
+
+        print >> sys.stderr, buf
+
+        opts = cls.Opts()
+        rows = []
+        for opt in opts:
+            col1 = ""
+            if opt.short:
+                col1 += "-%s " % opt.short
+
+            col1 += "--" + opt.longopt
+            if not is_bool(opt):
+                col1 += "="
+
+            col2 = []
+            if opt.desc:
+                col2.append(opt.desc)
+
+            if cls.env_path:
+                optenv = cls.env_path + opt.name
+                col2.append("environment: " + optenv.upper())
+
+            if opt.val is not None:
+                col2.append("default: " + str(opt.val))
+
+            rows.append((opt, col1, col2))
+
+        print >> sys.stderr, "Options: "
+        col1_maxlen = max([ len(col1) for opt, col1, col2 in rows ]) + 2
+
+        def format_option(col1, col2):
+            padding = " " * (col1_maxlen - len(col1))
+            line = "  " + col1 + padding
+            if col2:
+                line += col2[0]
+                del col2[0]
+
+            buf = line + "\n"
+            for col in col2:
+                buf += "  " + " " * col1_maxlen + col + "\n"
+
+            return buf
+
+        protected_rows = [ (col1, col2) for opt, col1, col2 in rows if opt.protected ]
+        rows = [ (col1, col2) for opt, col1, col2 in rows if not opt.protected ]
+
+        for col1, col2 in rows:
+            print >> sys.stderr, format_option(col1, col2)
+
+        if protected_rows:
+            print >> sys.stderr, "\nProtected options (root only):\n"
+            for col1, col2 in protected_rows: 
+                print >> sys.stderr, format_option(col1, col2)
+
+        if cls.file_path:
+            buf = "Configuration file format (%s):\n\n" % cls.file_path
+            buf += "  <option-name> <value>\n\n"
+
+            print >> sys.stderr, buf,
+
+        sys.exit(1)
+
 class TestOpts(Opts):
-    protected = Opt(default="built-in", protect=True)
-    bool = BoolOpt(short="b", default=False)
-    val = Opt(short="v")
+    bool = BoolOpt("a boolean flag", short="b", default=False)
+    val = Opt("a value", short="v")
     a_b = Opt()
 
     simple = "test"
     simplebool = False
 
 class TestCliConf(CliConf):
-    __doc__ = __doc__
+    """Syntax: $AV0 [-options] <arg>
+    """
 
     Opts = TestOpts
 
@@ -237,16 +337,21 @@ def test():
     import pprint
     pp = pprint.PrettyPrinter()
 
-    opts, args = TestCliConf.getopt()
+    try:
+        opts, args = TestCliConf.getopt()
+    except TestCliConf.Error, e:
+        TestCliConf.usage(e)
 
+    if len(args) != 1:
+        TestCliConf.usage("not enough arguments")
+
+    print "--- OPTIONS:"
     pp.pprint([ dict(opt) for opt in opts])
-
     for opt in opts:
         print "%s=%s" % (opt.name, opt.val)
 
-    print "args = " + `args`
-
-    #TestCliConf.usage()
+    arg = args[0]
+    print "arg = " + `arg`
 
 if __name__ == "__main__":
     test()

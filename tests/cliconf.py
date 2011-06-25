@@ -93,13 +93,12 @@ class CliConf:
 
         return None
 
-    @classmethod
-    def getopt(cls, args=None):
+    @staticmethod
+    def _cli_getopt(args, opts):
         # make arguments for getopt.gnu_getopt
         longopts = []
         shortopts = ""
 
-        opts = cls.Opts()
         for opt in opts:
             longopt = opt.longopt
             shortopt = opt.short
@@ -113,9 +112,11 @@ class CliConf:
             longopts.append(longopt)
             shortopts += shortopt
 
-        if not args:
-            args = sys.argv[1:]
-                
+        return getopt.gnu_getopt(args, shortopts, longopts)
+
+    @classmethod
+    def getopt(cls, args=None):
+        opts = cls.Opts()
         for opt in opts:
             optenv = cls.progname + "_" + opt.name
             optenv = optenv.upper()
@@ -130,7 +131,10 @@ class CliConf:
 
             opt.val = val
 
-        cli_opts, args = getopt.gnu_getopt(args, shortopts, longopts)
+        if not args:
+            args = sys.argv[1:]
+                
+        cli_opts, args = cls._cli_getopt(args, opts)
         for cli_opt, cli_val in cli_opts:
             for opt in opts:
                 if cli_opt in ("--" + opt.longopt,

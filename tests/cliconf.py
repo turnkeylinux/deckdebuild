@@ -1,3 +1,25 @@
+"""Pythonic cli configuration module
+
+Usage::
+
+    from cliconf import *
+    class MyOpts(Opts):
+
+        myopt = Opt(short="o")
+        mybool = BoolOpt(short="b")
+
+        simple_opt = ""
+        simple_bool = False
+
+    class MyCliConf(CliConf):
+        Opts = MyOpts
+        progname = "myprog"
+
+    opts, args = MyCliConf.getopt()
+    for opt in opts:
+        print "%s=%s" % (opt.name, opt.val)
+"""
+
 import os
 import sys
 import getopt

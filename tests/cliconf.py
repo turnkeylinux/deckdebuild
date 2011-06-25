@@ -2,6 +2,7 @@ import os
 import sys
 import getopt
 import copy
+import types
 
 class Opt:
     def __init__(self, desc=None, short="", rootonly=False, default=None):
@@ -32,13 +33,20 @@ def is_bool(opt):
 class Opts:
     def __init__(self):
         # make copies of options
-        attrnames =  [ attrname for attrname in vars(self.__class__) 
-                       if attrname[0] != "_" ]
+        for attrname, attr in vars(self.__class__).items():
+            if attrname[0] == "_":
+                continue
 
-        for attrname in attrnames:
-            attr = copy.copy(getattr(self, attrname))
+            if isinstance(attr, Opt):
+                attr = copy.copy(attr)
+            elif isinstance(attr, types.BooleanType):
+                attr = BoolOpt(default=attr)
+            else:
+                attr = Opt(default=attr)
+
             attr.name = attrname
             setattr(self, attrname, attr)
+
 
     def __iter__(self):
         for attr in vars(self).values():
@@ -117,6 +125,9 @@ class TestOpts(Opts):
     bool = BoolOpt(short="b", default=False)
     val = Opt(short="v")
     a_b = Opt()
+
+    simple = "test"
+    simplebool = False
 
 class TestCliConf(CliConf):
     __doc__ = __doc__

@@ -14,6 +14,7 @@ Usage::
     class MyCliConf(CliConf):
         Opts = MyOpts
         progname = "myprog"
+        confpath = "/etc/myprog.conf"
 
     opts, args = MyCliConf.getopt()
     for opt in opts:
@@ -25,6 +26,7 @@ import sys
 import getopt
 import copy
 import types
+import re
 
 class Opt:
     def __init__(self, desc=None, short="", rootonly=False, default=None):
@@ -82,7 +84,25 @@ class Opts:
 
         raise KeyError(`attrname`)
 
+    def __contains__(self, opt):
+        if isinstance(opt, Opt):
+            return opt in list(self)
+
+        if isinstance(opt, types.StringType):
+            attr = getattr(self, opt, None)
+            if isinstance(attr, Opt):
+                return True
+            return False
+
+        raise TypeError("type(%s) not a string or an Opt instance" %
+                        `opt`)
+
+class Error(Exception):
+    pass
+
 class CliConf:
+    confpath = None
+
     @staticmethod
     def parse_bool(val):
         if val.lower() in ('', '0', 'no', 'false'):
@@ -114,9 +134,40 @@ class CliConf:
 
         return getopt.gnu_getopt(args, shortopts, longopts)
 
+    @staticmethod
+    def _parse_conf_file(path):
+        try:
+            fh = file(path)
+
+            for line in fh.readlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+
+                name, val = re.split(r'\s+', line)
+                yield name, val
+        except IOError:
+            pass
+    
     @classmethod
     def getopt(cls, args=None):
         opts = cls.Opts()
+
+        if cls.confpath:
+            for name, val in cls._parse_conf_file(cls.confpath):
+                name = name.replace("-", "_")
+
+                if name not in opts:
+                    raise Error("unknown configuration file option `%s'" %
+                                name)
+
+                opt = opts[name]
+                if is_bool(opt):
+                    opt.val = parse_bool(val)
+                else:
+                    opt.val = val
+
+        # set options that are set in the environment
         for opt in opts:
             optenv = cls.progname + "_" + opt.name
             optenv = optenv.upper()
@@ -160,6 +211,7 @@ class TestCliConf(CliConf):
 
     Opts = TestOpts
     progname = "test"
+    confpath = "test.conf"
 
 def test():
     import pprint

@@ -13,7 +13,7 @@ Usage::
 
     class MyCliConf(CliConf):
         Opts = MyOpts
-        progname = "myprog"
+        envpath = "MYPROG_"
         confpath = "/etc/myprog.conf"
 
     opts, args = MyCliConf.getopt()
@@ -101,6 +101,7 @@ class Error(Exception):
     pass
 
 class CliConf:
+    envpath = None
     confpath = None
 
     @staticmethod
@@ -168,19 +169,20 @@ class CliConf:
                     opt.val = val
 
         # set options that are set in the environment
-        for opt in opts:
-            optenv = cls.progname + "_" + opt.name
-            optenv = optenv.upper()
+        if cls.envpath is not None:
+            for opt in opts:
+                optenv = cls.envpath + opt.name
+                optenv = optenv.upper()
 
-            if optenv not in os.environ:
-                continue
+                if optenv not in os.environ:
+                    continue
 
-            val = os.environ[optenv]
+                val = os.environ[optenv]
 
-            if is_bool(opt):
-                val = cls.parse_bool(val)
+                if is_bool(opt):
+                    val = cls.parse_bool(val)
 
-            opt.val = val
+                opt.val = val
 
         if not args:
             args = sys.argv[1:]
@@ -210,7 +212,7 @@ class TestCliConf(CliConf):
     __doc__ = __doc__
 
     Opts = TestOpts
-    progname = "test"
+    envpath = "TEST_"
     confpath = "test.conf"
 
 def test():

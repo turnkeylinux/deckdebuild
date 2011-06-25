@@ -1,3 +1,4 @@
+import os
 import sys
 import getopt
 import copy
@@ -45,6 +46,16 @@ class Opts:
         raise KeyError(`attrname`)
 
 class CliConf:
+    @staticmethod
+    def parse_bool(val):
+        if val.lower() in ('', '0', 'no', 'false'):
+            return False
+
+        if val.lower() in ('1', 'yes', 'true'):
+            return True
+
+        return None
+
     @classmethod
     def getopt(cls, args=None):
         # make arguments for getopt.gnu_getopt
@@ -68,6 +79,20 @@ class CliConf:
         if not args:
             args = sys.argv[1:]
                 
+        for opt in opts:
+            optenv = cls.progname + "_" + opt.name
+            optenv = optenv.upper()
+
+            if optenv not in os.environ:
+                continue
+
+            val = os.environ[optenv]
+
+            if is_bool(opt):
+                val = cls.parse_bool(val)
+
+            opt.val = val
+
         cli_opts, args = getopt.gnu_getopt(args, shortopts, longopts)
         for cli_opt, cli_val in cli_opts:
             for opt in opts:
@@ -87,15 +112,20 @@ class TestCliConf(CliConf):
     __doc__ = __doc__
 
     Opts = TestOpts
-    name = "test"
+    progname = "test"
 
 def test():
+    import pprint
+    pp = pprint.PrettyPrinter()
+
     opts, args = TestCliConf.getopt()
 
-    print `args`
-    print `opts`
+    pp.pprint([ dict(opt) for opt in opts])
+
     for opt in opts:
-        print "%s - %s " % (opt.name, dict(opt))
+        print "%s=%s" % (opt.name, opt.val)
+
+    print "args = " + `args`
 
     #TestCliConf.usage()
 

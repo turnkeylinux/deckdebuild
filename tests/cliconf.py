@@ -29,10 +29,10 @@ import types
 import re
 
 class Opt(object):
-    def __init__(self, desc=None, short="", rootonly=False, default=None):
+    def __init__(self, desc=None, short="", protect=False, default=None):
         self.desc = desc
         self.short = short
-        self.rootonly = rootonly
+        self.protect = protect
 
         self.val = default
         self.name = None
@@ -47,6 +47,14 @@ class Opt(object):
 
         return ""
     longopt = property(longopt)
+
+    def protected(self):
+        # protected options can't be set in suid mode
+        if self.protect and os.getuid() != os.geteuid():
+            return True
+
+        return False
+    protected = property(protected)
 
 class BoolOpt(Opt):
     @staticmethod
@@ -92,7 +100,6 @@ class Opts:
 
             attr.name = attrname
             setattr(self, attrname, attr)
-
 
     def __iter__(self):
         for attr in vars(self).values():
@@ -185,6 +192,9 @@ class CliConf:
                 if optenv not in os.environ:
                     continue
 
+                if opt.protected:
+                    continue
+                
                 opt.val = os.environ[optenv]
 
         if not args:
@@ -196,6 +206,9 @@ class CliConf:
                 if cli_opt in ("--" + opt.longopt,
                                "-" + opt.short):
 
+                    if opt.protected:
+                        raise Error("protected option (%s) can't be set while running suid" % opt.name)
+
                     if is_bool(opt):
                         opt.val = True
                     else:
@@ -204,6 +217,7 @@ class CliConf:
         return opts, args
 
 class TestOpts(Opts):
+    protected = Opt(default="built-in", protect=True)
     bool = BoolOpt(short="b", default=False)
     val = Opt(short="v")
     a_b = Opt()

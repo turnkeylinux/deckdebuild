@@ -235,10 +235,10 @@ class CliConf:
         if err:
             print >> sys.stderr, "error: " + str(err)
 
-        tpl = string.Template(cls.__doc__)
-        usage = tpl.substitute(AV0=os.path.basename(sys.argv[0]))
-
-        print >> sys.stderr, usage.strip()
+        if cls.__doc__:
+            tpl = string.Template(cls.__doc__)
+            buf = tpl.substitute(AV0=os.path.basename(sys.argv[0]))
+            print >> sys.stderr, buf.strip()
 
         order = ['comand line (highest precedence)']
         if cls.env_path:

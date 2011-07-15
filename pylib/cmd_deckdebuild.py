@@ -42,6 +42,8 @@ class CliConf(cliconf.CliConf):
     env_path = "DECKDEBUILD_"
     file_path = "/etc/deckdebuild.conf"
 
+usage = CliConf.usage
+
 def main():
     try:
         opts, args = CliConf.getopt()

@@ -1,0 +1,47 @@
+==================
+v1.0 Release Notes
+==================
+
+In use, stable and bug-free for nearly 3 quarters.
+
+Usage::
+
+    Syntax: deckdebuild [-options] /path/to/buildroot [ /path/to/output-dir ]
+    build a Debian package in a decked chroot
+
+    Output dir defaults to ../
+
+    Resolution order for options:
+    1) command line (highest precedence)
+    2) environment variable
+    3) configuration file (/etc/deckdebuild.conf)
+    4) built-in default (lowest precedence)
+
+    Options:
+      -r --root-cmd=         command userd to gain root_privileges
+                             environment: DECKDEBUILD_ROOT_CMD
+                             default: fakeroot
+
+      -u --user=             build username (created if it doesn't exist)
+                             environment: DECKDEBUILD_USER
+                             default: build
+
+      -p --preserve-build    don't remove build deck after build
+                             environment: DECKDEBUILD_PRESERVE_BUILD
+                             default: False
+
+
+    Protected options (root only):
+
+      --satisfydepends-cmd=  program used to satisfy build dependencies
+                             environment: DECKDEBUILD_SATISFYDEPENDS_CMD
+                             default: /usr/lib/pbuilder/pbuilder-satisfydepends
+
+      --vardir=              var data path
+                             environment: DECKDEBUILD_VARDIR
+                             default: /var/lib/deckdebuild
+
+    Configuration file format (/etc/deckdebuild.conf):
+
+      <option-name> <value>
+

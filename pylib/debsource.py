@@ -27,3 +27,19 @@ def get_version(path):
         if m:
             return m.group(1)
     raise Error("can't parse version from `%s'" % changelogfile)
+
+def get_mtime(path):
+    import rfc822
+    import datetime
+
+    changelogfile = join(path, "debian/changelog")
+
+    for line in file(changelogfile).readlines():
+        if not line.startswith(" -- "):
+            continue
+        break
+
+    m = re.match('.*>  (.*)', line)
+    assert m
+
+    return datetime.datetime(*rfc822.parsedate(m.group(1))[:6])

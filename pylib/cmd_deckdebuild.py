@@ -19,6 +19,9 @@ def fatal(s):
     sys.exit(1)
 
 class Opts(cliconf.Opts):
+    faketime = BoolOpt("use faketime (must be installed in buildroot)",
+                       default=False)
+
     preserve_build = BoolOpt("don't remove build deck after build",
                              short="p", default=False)
 

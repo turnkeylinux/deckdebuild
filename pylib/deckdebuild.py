@@ -45,6 +45,13 @@ def get_source_dir(name, version):
         version = version.split(':', 1)[1]
     return name + "-" + version
         
+def apply_faketime_patch(chroot, user):
+
+    patch_command = "find -name configure -exec sed -i 's/test \"$2\" = conftest.file/true/' {} \;"
+
+    system("chroot %s su %s -l -c %s" % \
+           mkargs(chroot, user, patch_command))
+
 def deckdebuild(path, buildroot, output_dir,
                 preserve_build=False, user='build', root_cmd='fakeroot',
                 satisfydepends_cmd='/usr/lib/pbuilder/pbuilder-satisfydepends',
@@ -89,6 +96,9 @@ def deckdebuild(path, buildroot, output_dir,
     system("tar -cf - . | chroot %s su %s -l -c \"mkdir -p %s && tar -C %s -xf -\"" % 
            mkargs(chroot, user, source_dir, source_dir))
     os.chdir(orig_cwd)
+
+    if faketime:
+        apply_faketime_patch(chroot, user)
 
     # create link to build directory in chroot
     user_home = getoutput("chroot %s su %s -l -c 'pwd'" % mkargs(chroot, user))

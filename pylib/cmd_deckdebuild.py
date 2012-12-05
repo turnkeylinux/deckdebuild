@@ -1,4 +1,13 @@
 #!/usr/bin/python
+# Copyright (c) TurnKey Linux - http://www.turnkeylinux.org
+#
+# This file is part of DeckDebuild
+#
+# DeckDebuild is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
+
 """Syntax: $AV0 [-options] /path/to/buildroot [ /path/to/output-dir ]
 build a Debian package in a decked chroot
 

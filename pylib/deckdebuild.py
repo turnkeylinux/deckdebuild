@@ -24,7 +24,7 @@ class Error(Exception):
 def symlink(src, dst):
     if not exists(dirname(dst)):
         os.makedirs(dirname(dst))
-        
+
     if lexists(dst):
         os.remove(dst)
 
@@ -36,7 +36,7 @@ def mkargs(*args):
 def system(command, *args):
     command = command + " " + " ".join(mkargs(*args))
     print "# " + command
-    
+
     err = os.system(command)
     if err:
         raise Error("command failed: " + command,
@@ -53,7 +53,7 @@ def get_source_dir(name, version):
     if ':' in version:
         version = version.split(':', 1)[1]
     return name + "-" + version
-        
+
 def apply_faketime_patch(chroot, user):
 
     patch_command = "find -name configure -exec sed -i 's/test \"$2\" = conftest.file/true/' {} \;"
@@ -68,20 +68,20 @@ def deckdebuild(path, buildroot, output_dir,
                 vardir='/var/lib/deckdebuild'):
 
     paths = DeckDebuildPaths(vardir)
-    
+
     if not isdir(buildroot):
         raise Error("buildroot `%s' is not a directory" % buildroot)
 
     source_name = debsource.get_control_fields(path)['Source']
     source_version = debsource.get_version(path)
-    
+
     source_dir = get_source_dir(source_name, source_version)
-    
+
     chroot = join(paths.chroots, source_dir)
 
     orig_uid = os.getuid()
     os.setuid(0)
-    
+
     # delete deck if it already exists
     if exists(chroot):
         system("deck -D", chroot)
@@ -102,7 +102,7 @@ def deckdebuild(path, buildroot, output_dir,
     orig_cwd = os.getcwd()
     os.chdir(path)
     # transfer package over to chroot
-    system("tar -cf - . | chroot %s su %s -l -c \"mkdir -p %s && tar -C %s -xf -\"" % 
+    system("tar -cf - . | chroot %s su %s -l -c \"mkdir -p %s && tar -C %s -xf -\"" %
            mkargs(chroot, user, source_dir, source_dir))
     os.chdir(orig_cwd)
 
@@ -111,11 +111,11 @@ def deckdebuild(path, buildroot, output_dir,
 
     # create link to build directory in chroot
     user_home = getoutput("chroot %s su %s -l -c 'pwd'" % mkargs(chroot, user))
-    
+
     build_dir = chroot + user_home
     build_link = join(paths.builds, source_dir)
     symlink(build_dir, build_link)
-    
+
     # build package in chroot
     build_cmd = "cd %s; " % source_dir
 
@@ -124,11 +124,13 @@ def deckdebuild(path, buildroot, output_dir,
         build_cmd += "faketime -f '%s' " % faketime_fmt
 
     build_cmd += "dpkg-buildpackage -uc -us -b -r%s" % root_cmd
-    
+
     trap = stdtrap.UnitedStdTrap(transparent=True)
     try:
+        system("chroot %s mount -t tmpfs none /dev/shm" % mkargs(chroot))
         system("chroot %s su %s -l -c %s" % mkargs(chroot, user, build_cmd))
     finally:
+        system("chroot %s umount -f /dev/shm" % mkargs(chroot))
         trap.close()
 
     os.seteuid(orig_uid)
@@ -146,7 +148,7 @@ def deckdebuild(path, buildroot, output_dir,
         if fname.split("_")[0] in packages:
             src = join(build_dir, fname)
             dst = join(output_dir, fname)
-            
+
             shutil.copyfile(src, dst)
 
     if not preserve_build:

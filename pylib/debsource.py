@@ -8,6 +8,7 @@
 # option) any later version.
 
 import re
+import deb822
 from os.path import *
 
 class Error(Exception):
@@ -15,10 +16,11 @@ class Error(Exception):
 
 def get_control_fields(path):
     controlfile = join(path, "debian/control")
-    return dict([ re.split("\s*:\s+", line.strip(), 1)
-                  for line in file(controlfile).readlines()
-                  if line.strip() and not line.startswith(" ") ])
-    
+    control_dict = dict()
+    for paragraph in deb822.Deb822.iter_paragraphs(open(controlfile)):
+        control_dict.update(paragraph)
+    return control_dict
+
 def get_packages(path):
     controlfile = join(path, "debian/control")
     return [ re.sub(r'^.*?:', '', line).strip()

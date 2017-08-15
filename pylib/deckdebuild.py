@@ -130,7 +130,7 @@ def deckdebuild(path, buildroot, output_dir,
         system("chroot %s mount -t tmpfs none /dev/shm" % mkargs(chroot))
         system("chroot %s su %s -l -c %s" % mkargs(chroot, user, build_cmd))
     finally:
-        system("chroot %s umount -f /dev/shm" % mkargs(chroot))
+        system("umount -f %s/dev/shm" % mkargs(chroot))
         trap.close()
 
     os.seteuid(orig_uid)

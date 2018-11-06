@@ -65,7 +65,8 @@ def deckdebuild(path, buildroot, output_dir,
                 preserve_build=False, user='build', root_cmd='fakeroot',
                 satisfydepends_cmd='/usr/lib/pbuilder/pbuilder-satisfydepends',
                 faketime=False,
-                vardir='/var/lib/deckdebuild'):
+                vardir='/var/lib/deckdebuild',
+                build_source=False):
 
     paths = DeckDebuildPaths(vardir)
 
@@ -123,7 +124,10 @@ def deckdebuild(path, buildroot, output_dir,
         faketime_fmt = debsource.get_mtime(path).strftime("%Y-%m-%d %H:%M:%S")
         build_cmd += "faketime -f '%s' " % faketime_fmt
 
-    build_cmd += "dpkg-buildpackage -d -uc -us -F -r%s" % root_cmd
+    if build_source:
+        build_cmd += "dpkg-buildpackage -d -uc -us -F -r%s" % root_cmd
+    else:
+        build_cmd += "dpkg-buildpackage -d -uc -us -b -r%s" % root_cmd
 
     trap = stdtrap.UnitedStdTrap(transparent=True)
     try:

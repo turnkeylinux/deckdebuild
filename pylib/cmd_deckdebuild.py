@@ -46,6 +46,8 @@ class Opts(cliconf.Opts):
 
     vardir = Opt("var data path", protect=True, default="/var/lib/deckdebuild")
 
+    build_source = BoolOpt("build a source package", short='s', default=False)
+
 class CliConf(cliconf.CliConf):
     __doc__ = __doc__
 

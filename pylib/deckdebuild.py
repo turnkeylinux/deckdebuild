@@ -153,7 +153,7 @@ def deckdebuild(path, buildroot, output_dir,
                 not fname.endswith('.buildinfo') and\
                 not fname.endswith('.tar.xz') and\
                 not fname.endswith('.tar.gz') and\
-                not fname.endswith('.tar.bz2') and\:
+                not fname.endswith('.tar.bz2'):
             continue
 
         if fname.split("_")[0] in packages:

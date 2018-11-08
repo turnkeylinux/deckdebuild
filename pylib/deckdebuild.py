@@ -148,11 +148,12 @@ def deckdebuild(path, buildroot, output_dir,
     packages = debsource.get_packages(path)
 
     for fname in os.listdir(build_dir):
-        name_part, ext_part = splitext(fname)
         if not fname.endswith(".deb") and\
                 not fname.endswith(".udeb") and\
                 not fname.endswith('.buildinfo') and\
-                not (ext_part in ('.gz', '.xz', '.bz2') and splitext(name_part)[1] == '.tar'):
+                not fname.endswith('.tar.xz') and\
+                not fname.endswith('.tar.gz') and\
+                not fname.endswith('.tar.bz2') and\:
             continue
 
         if fname.split("_")[0] in packages:

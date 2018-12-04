@@ -136,13 +136,15 @@ def deckdebuild(path, buildroot, output_dir,
     os.seteuid(orig_uid)
     output = trap.std.read()
     build_log = "%s/%s_%s.build" % (output_dir, source_name, source_version)
-    file(build_log, "w").write(output)
+
+    with open(build_log, 'w') as fob:
+        fob.write(output)
 
     # copy packages
     packages = debsource.get_packages(path)
 
     for fname in os.listdir(build_dir):
-        if not fname.endswith(".deb") and not fname.endswith(".udeb"):
+        if not fname.endswith(".deb") and not fname.endswith(".udeb") and not fname.endswith('.buildinfo'):
             continue
 
         if fname.split("_")[0] in packages:

@@ -50,7 +50,7 @@ class Opt(object):
         self.name = None
 
     def __iter__(self):
-        for attrname, attr in vars(self).items():
+        for attrname, attr in list(vars(self).items()):
             yield attrname, attr
 
     def longopt(self):
@@ -82,7 +82,7 @@ class BoolOpt(Opt):
     def set_val(self, val):
         if val not in (None, True, False):
             val = self.parse_bool(str(val))
-            
+
         self._val = val
 
     def get_val(self):
@@ -99,13 +99,13 @@ def is_bool(opt):
 class Opts:
     def __init__(self):
         # make copies of options
-        for attrname, attr in vars(self.__class__).items():
+        for attrname, attr in list(vars(self.__class__).items()):
             if attrname[0] == "_":
                 continue
 
             if isinstance(attr, Opt):
                 attr = copy.copy(attr)
-            elif isinstance(attr, types.BooleanType):
+            elif isinstance(attr, bool):
                 attr = BoolOpt(default=attr)
             else:
                 attr = Opt(default=attr)
@@ -114,7 +114,7 @@ class Opts:
             setattr(self, attrname, attr)
 
     def __iter__(self):
-        for attr in vars(self).values():
+        for attr in list(vars(self).values()):
             if isinstance(attr, Opt):
                 yield attr
 
@@ -123,20 +123,20 @@ class Opts:
         if isinstance(attr, Opt):
             return attr
 
-        raise KeyError(`attrname`)
+        raise KeyError(repr(attrname))
 
     def __contains__(self, opt):
         if isinstance(opt, Opt):
             return opt in list(self)
 
-        if isinstance(opt, types.StringType):
+        if isinstance(opt, bytes):
             attr = getattr(self, opt, None)
             if isinstance(attr, Opt):
                 return True
             return False
 
         raise TypeError("type(%s) not a string or an Opt instance" %
-                        `opt`)
+                        repr(opt))
 
 class Error(Exception):
     pass
@@ -168,7 +168,7 @@ class CliConf:
 
         try:
             opts, args = getopt.gnu_getopt(args, shortopts, longopts)
-        except getopt.GetoptError, e:
+        except getopt.GetoptError as e:
             raise Error(e)
 
         for opt, val in opts:
@@ -191,7 +191,7 @@ class CliConf:
                 yield name, val
         except IOError:
             pass
-    
+
     @classmethod
     def getopt(cls, args=None):
         opts = cls.Opts()
@@ -217,12 +217,12 @@ class CliConf:
 
                 if opt.protected:
                     continue
-                
+
                 opt.val = os.environ[optenv]
 
         if not args:
             args = sys.argv[1:]
-                
+
         cli_opts, args = cls._cli_getopt(args, opts)
         for cli_opt, cli_val in cli_opts:
             for opt in opts:
@@ -242,12 +242,12 @@ class CliConf:
     @classmethod
     def usage(cls, err=None):
         if err:
-            print >> sys.stderr, "error: " + str(err)
+            print("error: " + str(err), file=sys.stderr)
 
         if cls.__doc__:
             tpl = string.Template(cls.__doc__)
             buf = tpl.substitute(AV0=os.path.basename(sys.argv[0]))
-            print >> sys.stderr, buf.strip()
+            print(buf.strip(), file=sys.stderr)
 
         order = ['comand line (highest precedence)']
         if cls.env_path:
@@ -264,7 +264,7 @@ class CliConf:
         for i in range(1, len(order) + 1):
             buf += "%d) %s\n" % (i, order[i - 1])
 
-        print >> sys.stderr, buf
+        print(buf, file=sys.stderr)
 
         opts = cls.Opts()
         rows = []
@@ -290,7 +290,7 @@ class CliConf:
 
             rows.append((opt, col1, col2))
 
-        print >> sys.stderr, "Options: "
+        print("Options: ", file=sys.stderr)
         col1_maxlen = max([ len(col1) for opt, col1, col2 in rows ]) + 2
 
         def format_option(col1, col2):
@@ -310,18 +310,18 @@ class CliConf:
         rows = [ (col1, col2) for opt, col1, col2 in rows if not opt.protected ]
 
         for col1, col2 in rows:
-            print >> sys.stderr, format_option(col1, col2)
+            print(format_option(col1, col2), file=sys.stderr)
 
         if protected_rows:
-            print >> sys.stderr, "\nProtected options (root only):\n"
-            for col1, col2 in protected_rows: 
-                print >> sys.stderr, format_option(col1, col2)
+            print("\nProtected options (root only):\n", file=sys.stderr)
+            for col1, col2 in protected_rows:
+                print(format_option(col1, col2), file=sys.stderr)
 
         if cls.file_path:
             buf = "Configuration file format (%s):\n\n" % cls.file_path
             buf += "  <option-name> <value>\n\n"
 
-            print >> sys.stderr, buf,
+            print(buf, end=' ', file=sys.stderr)
 
         sys.exit(1)
 
@@ -348,19 +348,19 @@ def test():
 
     try:
         opts, args = TestCliConf.getopt()
-    except TestCliConf.Error, e:
+    except TestCliConf.Error as e:
         TestCliConf.usage(e)
 
     if len(args) != 1:
         TestCliConf.usage("not enough arguments")
 
-    print "--- OPTIONS:"
+    print("--- OPTIONS:")
     pp.pprint([ dict(opt) for opt in opts])
     for opt in opts:
-        print "%s=%s" % (opt.name, opt.val)
+        print("%s=%s" % (opt.name, opt.val))
 
     arg = args[0]
-    print "arg = " + `arg`
+    print("arg = " + repr(arg))
 
 if __name__ == "__main__":
     test()

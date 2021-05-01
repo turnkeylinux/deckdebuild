@@ -11,7 +11,7 @@ from os.path import *
 
 import os
 import shutil
-import commands
+import subprocess
 
 import stdtrap
 from paths import Paths
@@ -31,11 +31,11 @@ def symlink(src, dst):
     os.symlink(src, dst)
 
 def mkargs(*args):
-    return tuple(map(commands.mkarg, args))
+    return tuple(map(subprocess.mkarg, args))
 
 def system(command, *args):
     command = command + " " + " ".join(mkargs(*args))
-    print "# " + command
+    print("# " + command)
 
     err = os.system(command)
     if err:
@@ -43,7 +43,7 @@ def system(command, *args):
                     os.WEXITSTATUS(err))
 
 def getoutput(command):
-    (s,o) = commands.getstatusoutput(command)
+    (s,o) = subprocess.getstatusoutput(command)
     return o
 
 class DeckDebuildPaths(Paths):

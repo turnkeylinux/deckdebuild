@@ -24,7 +24,7 @@ import cliconf
 from cliconf import Opt, BoolOpt
 
 def fatal(s):
-    print >> sys.stderr, "error: " + str(s)
+    print("error: " + str(s), file=sys.stderr)
     sys.exit(1)
 
 class Opts(cliconf.Opts):
@@ -61,7 +61,7 @@ usage = CliConf.usage
 def main():
     try:
         opts, args = CliConf.getopt()
-    except CliConf.Error, e:
+    except CliConf.Error as e:
         CliConf.usage(e)
 
     if not args:
@@ -79,7 +79,7 @@ def main():
     conf = dict([ (opt.name, opt.val) for opt in opts ])
     try:
         deckdebuild.deckdebuild(os.getcwd(), buildroot, outputdir, **conf)
-    except deckdebuild.Error, e:
+    except deckdebuild.Error as e:
         fatal(e)
 
 if __name__=="__main__":

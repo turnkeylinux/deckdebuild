@@ -1,0 +1,2 @@
+deckdebuild.py  /usr/lib/deckdebuild/
+conf/*          /etc/deckdebuild/

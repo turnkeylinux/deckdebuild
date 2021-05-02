@@ -19,5 +19,7 @@ Depends:
  ${python3:Depends},
  pbuilder,
  deck,
+ turnkey-stdtrap,
+ turnkey-paths,
  python3-debian
 Description: build a Debian package in a decked chroot

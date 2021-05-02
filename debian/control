@@ -6,6 +6,7 @@ Build-Depends:
  debhelper (>= 10),
  dh-systemd,
  python3-all (>= 3.5~),
+ turnkey-conffile,
  turnkey-stdtrap,
  turnkey-paths,
  python3-debian
@@ -19,6 +20,7 @@ Depends:
  ${python3:Depends},
  pbuilder,
  deck,
+ turnkey-conffile,
  turnkey-stdtrap,
  turnkey-paths,
  python3-debian

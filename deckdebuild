@@ -114,7 +114,7 @@ def main():
     args = parser.parse_args()
     try:
         deckdebuild(os.getcwd(),
-                    args.path_to_buildroot, args.path_to_outputdir,
+                    args.path_to_buildroot, args.path_to_output_dir,
                     root_cmd=args.root_cmd, user=args.user,
                     preserve_build=args.preserve_build,
                     faketime=args.faketime,

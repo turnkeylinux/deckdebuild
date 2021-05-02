@@ -16,9 +16,9 @@ import subprocess
 import stdtrap
 from paths import Paths
 
-import debsource
+from libdeckdebuild import debsource
 
-class Error(Exception):
+class DeckDebuildError(Exception):
     pass
 
 def symlink(src, dst):
@@ -39,7 +39,7 @@ def system(command, *args):
 
     err = os.system(command)
     if err:
-        raise Error("command failed: " + command,
+        raise DeckDebuildError("command failed: " + command,
                     os.WEXITSTATUS(err))
 
 def getoutput(command):
@@ -71,7 +71,7 @@ def deckdebuild(path, buildroot, output_dir,
     paths = DeckDebuildPaths(vardir)
 
     if not isdir(buildroot):
-        raise Error("buildroot `%s' is not a directory" % buildroot)
+        raise DeckDebuildError("buildroot `%s' is not a directory" % buildroot)
 
     source_name = debsource.get_control_fields(path)['Source']
     source_version = debsource.get_version(path)

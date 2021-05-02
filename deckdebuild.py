@@ -10,8 +10,10 @@
 
 import argparse
 import os
+import sys
 from os import environ
 
+from libdeckdebuild import deckdebuild, DeckDebuildError
 from conffile import ConfFile
 
 default_values = {
@@ -26,8 +28,14 @@ default_values = {
     }
 
 
+def fatal(s):
+    print("error: " + str(s), file=sys.stderr)
+    sys.exit(1)
+
+
 class Config(ConfFile):
     CONF_FILE = "/etc/deckdebuild.conf"
+
 
 def get_env(prefix="DECKDEBUILD_"):
     items = {}
@@ -62,7 +70,7 @@ def main():
 
     parser = argparse.ArgumentParser(
              description="build a Debian package in a decked chroot")
-    parser.add_argument("-r", "--root-cmd", 
+    parser.add_argument("-r", "--root-cmd",
                         help="command used to gain root_privileges"
                              " env: DECKDEBUILD_ROOT_CMD"
                              " default: {}".format(conf.root_cmd),
@@ -99,6 +107,21 @@ def main():
                         default=os.getcwd())
     args = parser.parse_args()
     print(args)
+    print(args.faketime)
+    #for arg in args:
+    #
+    #try:
+    #    deckdebuild(os.getcwd(),
+    #                args.path_to_buildroot, args.path_to_outputdir,
+    #                root_cmd=args.root_cmd, user=args.user,
+    #                preserve_build=args.preserve_build,
+    #                faketime=args.faketime,
+    #                satisfydepends_cmd=args.satisfydepends_cmd,
+    #                vardir=args.vardir,
+    #                build_source=args.build_source):)
+    #except DeckDebuildError as e:
+    #    fatal(e)
+
 
 if __name__=='__main__':
     main()

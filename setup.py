@@ -8,6 +8,6 @@ setup(
     author="Jeremy Davis",
     author_email="jeremy@turnkeylinux.org",
     url="https://github.com/turnkeylinux/deckdebuild",
-    packages=["deckdebuild"],
+    packages=["libdeckdebuild"],
     scripts=["deckdebuild"]
 )

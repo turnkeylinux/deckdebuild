@@ -35,7 +35,7 @@ def fatal(s):
 
 
 class Config(ConfFile):
-    CONF_FILE = "/etc/deckdebuild.conf"
+    CONF_FILE = "/etc/deckdebuild/deckdebuild.conf"
 
 
 def get_env(prefix="DECKDEBUILD_"):

@@ -23,6 +23,7 @@ default_values = {
     "faketime": False,
     "satisfydepends_cmd": "/usr/lib/pbuilder/pbuilder-satisfydepends",
     "vardir": "/var/lib/deckdebuild",
+    "build_source": False,
     "path_to_buildroot": "",
     "path_to_output_dir": os.getcwd()
     }
@@ -100,27 +101,28 @@ def main():
                              " env: DECKDEBUILD_VARDIR"
                              " default: {}".format(conf.vardir),
                         default=conf.vardir)
+    parser.add_argument("-b", "--build-source",
+                        help="Build source package too."
+                             " env: DECKDEBUILD_BUILD_SOURCE"
+                             " default: {}".format(conf.build_source),
+                        action=conf.build_source_action)
     parser.add_argument("path_to_buildroot",
                         help="Path to an exisiting buildroot")
     parser.add_argument("path_to_output_dir", nargs='?',
                         help="Path to output",
                         default=os.getcwd())
     args = parser.parse_args()
-    print(args)
-    print(args.faketime)
-    #for arg in args:
-    #
-    #try:
-    #    deckdebuild(os.getcwd(),
-    #                args.path_to_buildroot, args.path_to_outputdir,
-    #                root_cmd=args.root_cmd, user=args.user,
-    #                preserve_build=args.preserve_build,
-    #                faketime=args.faketime,
-    #                satisfydepends_cmd=args.satisfydepends_cmd,
-    #                vardir=args.vardir,
-    #                build_source=args.build_source):)
-    #except DeckDebuildError as e:
-    #    fatal(e)
+    try:
+        deckdebuild(os.getcwd(),
+                    args.path_to_buildroot, args.path_to_outputdir,
+                    root_cmd=args.root_cmd, user=args.user,
+                    preserve_build=args.preserve_build,
+                    faketime=args.faketime,
+                    satisfydepends_cmd=args.satisfydepends_cmd,
+                    vardir=args.vardir,
+                    build_source=args.build_source)
+    except DeckDebuildError as e:
+        fatal(e)
 
 
 if __name__=='__main__':

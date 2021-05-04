@@ -7,11 +7,14 @@
 # Free Software Foundation; either version 3 of the License, or (at your
 # option) any later version.
 
-from os.path import *
+#from os.path import *
+from os.path import join, isdir, exists
+from pathlib import Path
 
 import os
 import shutil
 import subprocess
+from subprocess import PIPE
 
 import stdtrap
 from paths import Paths
@@ -30,24 +33,24 @@ def symlink(src, dst):
 
     os.symlink(src, dst)
 
-def mkargs(*args):
-    return tuple(map(subprocess.mkarg, args))
+def system(command, *args, get_output=False):
 
-def system(command, *args):
-    command = command + " " + " ".join(mkargs(*args))
-    print("# " + command)
+    if isinstance(command , str):
+        command = [command]
+    command = command + [*args]
+    print("# {}".format(command))
 
-    err = os.system(command)
-    if err:
+    proc = subprocess.run(command)
+    if get_output:
+        return proc.stdout
+    if proc.returncode != 0:
         raise DeckDebuildError("command failed: " + command,
-                    os.WEXITSTATUS(err))
+                               os.WEXITSTATUS(proc.returncode))
 
-def getoutput(command):
-    (s,o) = subprocess.getstatusoutput(command)
-    return o
 
 class DeckDebuildPaths(Paths):
     files = ['chroots', 'builds']
+
 
 def get_source_dir(name, version):
     if ':' in version:
@@ -56,10 +59,9 @@ def get_source_dir(name, version):
 
 def apply_faketime_patch(chroot, user):
 
-    patch_command = "find -name configure -exec sed -i 's/test \"$2\" = conftest.file/true/' {} \;"
+    patch_command = ["find", "-name", "configure", "-exec", "sed", "-i", "s/test \"$2\" = conftest.file/true/", "{}", ";"]
 
-    system("chroot %s su %s -l -c %s" % \
-           mkargs(chroot, user, patch_command))
+    system("chroot", chroot, "su", user, "-l", "-c", *patch_command)
 
 def deckdebuild(path, buildroot, output_dir,
                 preserve_build=False, user='build', root_cmd='fakeroot',
@@ -67,28 +69,31 @@ def deckdebuild(path, buildroot, output_dir,
                 faketime=False,
                 vardir='/var/lib/deckdebuild',
                 build_source=False):
-
     paths = DeckDebuildPaths(vardir)
 
     if not isdir(buildroot):
         raise DeckDebuildError("buildroot `%s' is not a directory" % buildroot)
 
+    #print('paths:', paths)
+
     source_name = debsource.get_control_fields(path)['Source']
+    #print('src name', source_name)
     source_version = debsource.get_version(path)
+    #print('src ver', source_version)
+    source_dir = Path(get_source_dir(source_name, source_version))
 
-    source_dir = get_source_dir(source_name, source_version)
-
-    chroot = join(paths.chroots, source_dir)
+    chroot = Path(paths.chroots, source_dir)
 
     orig_uid = os.getuid()
     os.setuid(0)
 
     # delete deck if it already exists
     if exists(chroot):
-        system("deck -D", chroot)
+        system(["deck", "-D", chroot])
 
     # create new deck from the correct buildroot
-    system("deck", buildroot, chroot)
+    print('creating deck', chroot)
+    system(["deck", buildroot, chroot])
 
     # satisfy dependencies
     os.environ['LANG'] = ""
@@ -96,45 +101,47 @@ def deckdebuild(path, buildroot, output_dir,
     system(satisfydepends_cmd, "--chroot", chroot)
 
     # create user if it doesn't already exist
-    userent = getoutput("chroot %s getent passwd %s" % mkargs(chroot, user))
+    userent = system(["chroot", chroot, "getent", "passwd", user], get_output=True)
     if not userent:
-        system("chroot", chroot, "useradd", "-m", user)
+        system(["chroot", chroot, "useradd", "-m", user])
 
     orig_cwd = os.getcwd()
     os.chdir(path)
+
     # transfer package over to chroot
-    system("tar -cf - . | chroot %s su %s -l -c \"mkdir -p %s && tar -C %s -xf -\"" %
-           mkargs(chroot, user, source_dir, source_dir))
+    chr_source_dir = Path(chroot, source_dir)
+    #chr_source_dir.mkdir(parents=True)
+    shutil.copytree(path, chr_source_dir)
     os.chdir(orig_cwd)
 
     if faketime:
         apply_faketime_patch(chroot, user)
-
+    sys.exit(1)
     # create link to build directory in chroot
-    user_home = getoutput("chroot %s su %s -l -c 'pwd'" % mkargs(chroot, user))
+    user_home = getoutput(["chroot", chroot, "su", user, "-l", "-c", "pwd"])
 
     build_dir = chroot + user_home
-    build_link = join(paths.builds, source_dir)
+    build_link = Path(paths.builds, source_dir)
     symlink(build_dir, build_link)
 
     # build package in chroot
-    build_cmd = "cd %s; " % source_dir
+    build_cmd = ["cd {}".format(source_dir)]
 
     if faketime:
         faketime_fmt = debsource.get_mtime(path).strftime("%Y-%m-%d %H:%M:%S")
-        build_cmd += "faketime -f '%s' " % faketime_fmt
+        build_cmd += ["faketime", "-f", faketime_fmt]
 
     if build_source:
-        build_cmd += "dpkg-buildpackage -d -uc -us -F -r%s" % root_cmd
+        build_cmd += ["dpkg-buildpackage", "-d", "-uc", "-us", "-F", "-r{}".format(root_cmd)]
     else:
-        build_cmd += "dpkg-buildpackage -d -uc -us -b -r%s" % root_cmd
+        build_cmd += ["dpkg-buildpackage", "-d", "-uc", "-us", "-b", "-r{}".format(root_cmd)]
 
     trap = stdtrap.UnitedStdTrap(transparent=True)
     try:
-        system("chroot %s mount -t tmpfs none /dev/shm" % mkargs(chroot))
-        system("chroot %s su %s -l -c %s" % mkargs(chroot, user, build_cmd))
+        system(["chroot", chroot, "mount", "-t" "tmpfs", "none", "/dev/shm"])
+        system(["chroot",  chroot, "su", user, "-l", "-c", build_cmd])
     finally:
-        system("umount -f %s/dev/shm" % mkargs(chroot))
+        system(["umount", "-f", Path(chroot, "dev/shm")])
         trap.close()
 
     os.seteuid(orig_uid)

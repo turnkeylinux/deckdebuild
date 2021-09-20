@@ -8,7 +8,7 @@
 # option) any later version.
 
 import re
-import deb822
+from debian import deb822
 from os.path import *
 
 class Error(Exception):
@@ -40,7 +40,7 @@ def get_version(path):
     raise Error("can't parse version from `%s'" % changelogfile)
 
 def get_mtime(path):
-    import rfc822
+    from email.utils import parsedate
     import datetime
 
     changelogfile = join(path, "debian/changelog")
@@ -53,4 +53,4 @@ def get_mtime(path):
     m = re.match('.*>  (.*)', line)
     assert m
 
-    return datetime.datetime(*rfc822.parsedate(m.group(1))[:6])
+    return datetime.datetime(*parsedate(m.group(1))[:6])

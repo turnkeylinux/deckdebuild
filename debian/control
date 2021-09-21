@@ -1,12 +1,21 @@
 Source: deckdebuild
 Section: misc
 Priority: optional
-Maintainer: Liraz Siri <liraz@turnkeylinux.org>
-Build-Depends: pyproject-common
-Standards-Version: 3.6.1
+Maintainer: Jeremy Davis <jeremy@turnkeylinux.org>
+Build-Depends: 
+ debhelper (>= 10),
+ dh-systemd,
+ python3-all (>= 3.5~),
+ python3-debian
+Standards-Version: 4.0.0
+X-Python-Version: >= 3.5
 
 Package: deckdebuild
 Architecture: any
-Depends: pyproject-common, pbuilder, deck, python-debian
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ pbuilder,
+ deck,
+ python3-debian
 Description: build a Debian package in a decked chroot
-

@@ -8,7 +8,7 @@
 # option) any later version.
 
 import re
-import deb822
+from debian import deb822
 from os.path import *
 
 class Error(Exception):
@@ -24,28 +24,28 @@ def get_control_fields(path):
 def get_packages(path):
     controlfile = join(path, "debian/control")
     return [ re.sub(r'^.*?:', '', line).strip()
-             for line in file(controlfile).readlines()
+             for line in open(controlfile).readlines()
              if re.match(r'^Package:', line, re.I) ]
 
 def get_version(path):
     changelogfile = join(path, "debian/changelog")
-    
+
     if not exists(changelogfile):
         raise Error("no such file or directory `%s'" % changelogfile)
-    
-    for line in file(changelogfile).readlines():
+
+    for line in open(changelogfile).readlines():
         m = re.match('^\w[-+0-9a-z.]* \(([^\(\) \t]+)\)(?:\s+[-+0-9a-z.]+)+\;',line, re.I)
         if m:
             return m.group(1)
     raise Error("can't parse version from `%s'" % changelogfile)
 
 def get_mtime(path):
-    import rfc822
+    from email.utils import parsedate
     import datetime
 
     changelogfile = join(path, "debian/changelog")
 
-    for line in file(changelogfile).readlines():
+    for line in open(changelogfile).readlines():
         if not line.startswith(" -- "):
             continue
         break
@@ -53,4 +53,4 @@ def get_mtime(path):
     m = re.match('.*>  (.*)', line)
     assert m
 
-    return datetime.datetime(*rfc822.parsedate(m.group(1))[:6])
+    return datetime.datetime(*parsedate(m.group(1))[:6])

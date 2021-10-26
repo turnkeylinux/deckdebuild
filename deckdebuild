@@ -22,7 +22,7 @@ default_values = {
     "preserve_build": False,
     "faketime": False,
     "satisfydepends_cmd": "/usr/lib/pbuilder/pbuilder-satisfydepends",
-    "vardir": "/var/lib/deckdebuild",
+    "vardir": "/var/lib/deckdebuilds",
     "build_source": False,
     "path_to_buildroot": "",
     "path_to_output_dir": os.getcwd()

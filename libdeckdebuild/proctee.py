@@ -28,6 +28,8 @@ def _proctee(
         prefix = ''
     elif prefix and EXPERIMENTAL_COLORS:
         prefix = colorama.Fore.CYAN + prefix + ' => ' + colorama.Fore.RESET
+    else:
+        prefix = prefix + ' => '
 
     print("# {}".format(' '.join(map(shlex.quote, cmd))))
 

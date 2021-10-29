@@ -64,7 +64,7 @@ def deckdebuild(
         root_cmd: str='fakeroot',
         satisfydepends_cmd: str='/usr/lib/pbuilder/pbuilder-satisfydepends',
         faketime: bool=False,
-        vardir: str='/var/lib/deckdebuild',
+        vardir: str='/var/lib/deckdebuilds',
         build_source: bool=False):
 
     vardir = os.fspath(vardir)

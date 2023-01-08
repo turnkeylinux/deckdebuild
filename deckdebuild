@@ -43,7 +43,7 @@ def get_env(prefix="DECKDEBUILD_"):
     for key in environ.keys():
         if key.startswith(prefix):
             name = key[len(prefix):].lower()
-            self.items[name] = environ[key]
+            items[name] = environ[key]
     return items
 
 

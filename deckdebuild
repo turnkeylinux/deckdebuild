@@ -57,6 +57,10 @@ class Conf(dict):
                 value = conf_file[key]
             if key in env:
                 value = env[key]
+            if isinstance(value, str) and value.lower() == 'true':
+                value = True
+            elif isinstance(value, str) and value.lower() == 'false':
+                value = False
             if isinstance(value,  bool):
                 action = "store_{}".format(str(not value).lower())
                 new_key = key+'_action'

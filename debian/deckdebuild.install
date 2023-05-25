@@ -1,1 +1,1 @@
-conf/*          /etc/deckdebuild/
+conf/deckdebuild.conf   /etc/deckdebuild/

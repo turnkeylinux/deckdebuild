@@ -62,7 +62,7 @@ class Conf(dict):
             elif isinstance(value, str) and value.lower() == 'false':
                 value = False
             if isinstance(value,  bool):
-                action = "store_{}".format(str(not value).lower())
+                action = f"store_{str(not value).lower()}"
                 new_key = key+'_action'
                 default[new_key] = action
             default[key] = value
@@ -78,37 +78,37 @@ def main():
     parser.add_argument("-r", "--root-cmd",
                         help="command used to gain root_privileges"
                              " env: DECKDEBUILD_ROOT_CMD"
-                             " default: {}".format(conf.root_cmd),
+                             f" default: {conf.root_cmd}",
                         default=conf.root_cmd)
     parser.add_argument("-u", "--user",
                         help="build username (created if it doesn't exist)"
                              " env: DECKDEBUILD_USER"
-                             " default: {}".format(conf.user),
+                             f" default: {conf.user}",
                         default=conf.user)
     parser.add_argument("-p", "--preserve-build",
                         help="don't remove build deck after build"
                              " env: DECKDEBUILD_PRESERVE_BUILD"
-                             " default: {}".format(conf.preserve_build),
+                             f" default: {conf.preserve_build}",
                         action=conf.preserve_build_action)
     parser.add_argument("-f", "--faketime",
                         help="use faketime (must be installed)"
                              " env: DECKDEBUILD_FAKETIME"
-                             " default: {}".format(conf.faketime),
+                             f" default: {conf.faketime}",
                         action=conf.faketime_action)
     parser.add_argument("--satisfydepends-cmd",
                         help="program used to satisfy build dependencies"
                              " env: DECKDEBUILD_SATISFYDEPENDS_CMD"
-                             " default: {}".format(conf.satisfydepends_cmd),
+                             f" default: {conf.satisfydepends_cmd}",
                         default=conf.satisfydepends_cmd)
     parser.add_argument("--vardir",
                         help="var data path"
                              " env: DECKDEBUILD_VARDIR"
-                             " default: {}".format(conf.vardir),
+                             f" default: {conf.vardir}",
                         default=conf.vardir)
     parser.add_argument("-b", "--build-source",
                         help="Build source package too."
                              " env: DECKDEBUILD_BUILD_SOURCE"
-                             " default: {}".format(conf.build_source),
+                             f" default: {conf.build_source}",
                         action=conf.build_source_action)
     parser.add_argument("path_to_buildroot",
                         help="Path to an exisiting buildroot")

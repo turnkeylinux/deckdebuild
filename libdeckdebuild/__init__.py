@@ -73,7 +73,7 @@ def deckdebuild(
     path_builds = join(vardir, 'builds')
 
     if not isdir(buildroot):
-        raise DeckDebuildError("buildroot `%s' is not a directory" % buildroot)
+        raise DeckDebuildError(f"buildroot `{buildroot}' is not a directory")
 
     source_name = debsource.get_control_fields(path)['Source']
     source_version = debsource.get_version(path)
@@ -98,25 +98,33 @@ def deckdebuild(
     system([satisfydepends_cmd, "--chroot", chroot], prefix='satisfydepends')
 
     # create user if it doesn't already exist
-    user_exists = \
-            get_returncode(["chroot", chroot, "getent", "passwd", user],
-                    prefix='user-check') == 0
+    user_exists = get_returncode(
+            ["chroot", chroot, "getent", "passwd", user],
+            prefix='user-check'
+            ) == 0
     if not user_exists:
-        system(["chroot", chroot, "useradd", "-m", user], prefix='add-user')
+        system(
+            ["chroot", chroot, "useradd", "-m", user],
+            prefix='add-user')
 
     orig_cwd = os.getcwd()
     os.chdir(path)
 
-    user_home: str = get_output(["chroot", chroot, "su", user, "-l", "-c",
-        "pwd"], prefix='user-home')
+    user_home: str = get_output(
+            ["chroot", chroot, "su", user, "-l", "-c", "pwd"],
+            prefix='user-home')
 
     # transfer package over to chroot
     chr_source_dir = join(chroot, relpath(user_home, '/'), source_dir)
     shutil.copytree(path, chr_source_dir)
 
     # fix permissions for build
-    build_uid, build_gid = get_output(['chroot', chroot, 'su', user, '-l', '-c',
-        'cat /etc/passwd | grep build | cut -d":" -f3,4'], prefix='get uid').rstrip().split(':')
+    build_uid, build_gid = get_output(
+            ['chroot', chroot, 'su', user, '-l', '-c',
+             'cat /etc/passwd | grep build | cut -d":" -f3,4'
+             ],
+            prefix='get uid'
+            ).rstrip().split(':')
     build_uid = int(build_uid)
     build_gid = int(build_gid)
 
@@ -137,18 +145,16 @@ def deckdebuild(
     symlink(build_dir, build_link)
 
     # build package in chroot
-    build_cmd = "cd {};".format(shlex.quote(source_dir))
+    build_cmd = f"cd {shlex.quote(source_dir)};"
 
     if faketime:
         faketime_fmt = debsource.get_mtime(path).strftime("%Y-%m-%d %H:%M:%S")
-        build_cmd += "faketime -f {};".format(shlex.quote(faketime_fmt))
+        build_cmd += f"faketime -f {shlex.quote(faketime_fmt)};"
 
     if build_source:
-        build_cmd += "dpkg-buildpackage -d -uc -us -F -r{}".format(
-                shlex.quote(root_cmd))
+        build_cmd += f"dpkg-buildpackage -d -uc -us -F -r{shlex.quote(root_cmdv)};"
     else:
-        build_cmd += "dpkg-buildpackage -d -uc -us -b -r{}".format(
-                shlex.quote(root_cmd))
+        build_cmd += f"dpkg-buildpackage -d -uc -us -b -r{shlex.quote(root_cmd)};"
 
     trapped = StringIO()
     try:
@@ -164,7 +170,7 @@ def deckdebuild(
 
     os.seteuid(orig_uid)
     output = trapped.getvalue()
-    build_log = "%s/%s_%s.build" % (output_dir, source_name, source_version)
+    build_log = f"{output_dir}/{source_name}_{source_version}.build"
 
     with open(build_log, 'w') as fob:
         fob.write(output)

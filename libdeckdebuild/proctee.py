@@ -31,7 +31,7 @@ def _proctee(
     else:
         prefix = prefix + ' => '
 
-    print("# {}".format(' '.join(map(shlex.quote, cmd))))
+    print(f"# {' '.join(map(shlex.quote, cmd))}")
 
     proc = subprocess.Popen(
         cmd,

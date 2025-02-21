@@ -13,7 +13,7 @@ import os
 import sys
 from os import environ
 
-from libdeckdebuild import deckdebuild, DeckDebuildError
+from libdeckdebuild import get_host_arch, deckdebuild, DeckDebuildError
 from conffile import ConfFile
 
 default_values = {
@@ -25,7 +25,8 @@ default_values = {
     "vardir": "/var/lib/deckdebuilds",
     "build_source": False,
     "path_to_buildroot": "",
-    "path_to_output_dir": os.getcwd()
+    "path_to_output_dir": os.getcwd(),
+    "arch": get_host_arch()
     }
 
 
@@ -85,6 +86,11 @@ def main():
                              " env: DECKDEBUILD_USER"
                              f" default: {conf.user}",
                         default=conf.user)
+    parser.add_argument("-a", "--arch",
+                        help="architechture to build package for"
+                             " env: DECKDEBUILD_ARCH"
+                             f" default: {conf.arch}",
+                        default=conf.arch)
     parser.add_argument("-p", "--preserve-build",
                         help="don't remove build deck after build"
                              " env: DECKDEBUILD_PRESERVE_BUILD"
@@ -110,21 +116,28 @@ def main():
                              " env: DECKDEBUILD_BUILD_SOURCE"
                              f" default: {conf.build_source}",
                         action=conf.build_source_action)
+    # XXX need to append arch to buildroot if it isn't already
+    # and need to warn user...
     parser.add_argument("path_to_buildroot",
                         help="Path to an exisiting buildroot")
     parser.add_argument("path_to_output_dir", nargs='?',
                         help="Path to output",
                         default=os.getcwd())
     args = parser.parse_args()
+    if get_host_arch != "amd64" and args.arch == "amd64":
+        fatal("amd64 can only be built on amd64")
     try:
         deckdebuild(os.getcwd(),
-                    args.path_to_buildroot, args.path_to_output_dir,
-                    root_cmd=args.root_cmd, user=args.user,
+                    args.path_to_buildroot,
+                    args.path_to_output_dir,
+                    root_cmd=args.root_cmd,
+                    user=args.user,
                     preserve_build=args.preserve_build,
                     faketime=args.faketime,
                     satisfydepends_cmd=args.satisfydepends_cmd,
                     vardir=args.vardir,
-                    build_source=args.build_source)
+                    build_source=args.build_source,
+                    arch=args.arch)
     except DeckDebuildError as e:
         fatal(e)
 

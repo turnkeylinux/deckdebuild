@@ -54,6 +54,18 @@ def get_source_dir(name, version):
     return name + "-" + version
 
 
+def get_host_arch():
+    host_arch = os.uname().machine.lower()
+    if host_arch == "x86_64":
+        return "amd64"
+    # XXX test this on ARM64 machine but should be one of these
+    elif host_arch == "aarch64" or host_arch == "arm64":
+        return "arm64"
+    else:
+        # don't know what it is!?
+        raise DeckDebuildError(f"Unexpected/unknown architecture {host_arch}")
+
+
 def apply_faketime_patch(chroot, user):
 
     patch_command = ["find", "-name", "configure", "-exec",
@@ -73,13 +85,16 @@ def deckdebuild(
         satisfydepends_cmd: str = '/usr/lib/pbuilder/pbuilder-satisfydepends',
         faketime: bool = False,
         vardir: str = '/var/lib/deckdebuilds',
-        build_source: bool = False):
+        build_source: bool = False,
+        arch: str = get_host_arch()
+        ):
 
     vardir = os.fspath(vardir)
 
     path_chroots = join(vardir, 'chroots')
     path_builds = join(vardir, 'builds')
-
+    # XXX the arch should be appended to the buildroot, but not yet sure of
+    # the best way to do that?
     if not isdir(buildroot):
         raise DeckDebuildError(f"buildroot `{buildroot}' is not a directory")
 

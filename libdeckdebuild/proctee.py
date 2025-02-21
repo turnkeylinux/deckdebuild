@@ -1,7 +1,7 @@
 import subprocess
 from subprocess import PIPE, STDOUT
 from threading import Thread, Lock
-from typing import List, Tuple, Optional
+from typing import Optional
 import shlex
 import sys
 import io
@@ -17,13 +17,14 @@ if EXPERIMENTAL_COLORS:
 if EXPERIMENTAL_COLORS:
     colorama.init(autoreset=True)
 
+
 def _proctee(
-        cmd: List[str],
-        stdout_sinks: List[io.TextIOBase],
-        stderr_sinks: List[io.TextIOBase],
+        cmd: list[str],
+        stdout_sinks: list[io.TextIOBase],
+        stderr_sinks: list[io.TextIOBase],
         prefix: Optional[str] = None,
         **kwargs
-    ) -> int:
+        ) -> int:
     if prefix is None:
         prefix = ''
     elif prefix and EXPERIMENTAL_COLORS:
@@ -35,15 +36,15 @@ def _proctee(
 
     proc = subprocess.Popen(
         cmd,
-        stdout = PIPE,
-        stderr = PIPE,
-        bufsize = 0,
-        text = True,
+        stdout=PIPE,
+        stderr=PIPE,
+        bufsize=0,
+        text=True,
         **kwargs
     )
     lock = Lock()
 
-    def reader(io_in: io.TextIOBase, io_out: List[io.TextIOBase]):
+    def reader(io_in: io.TextIOBase, io_out: list[io.TextIOBase]):
         buff = ''
         while True:
             buff += io_in.read(1)
@@ -73,19 +74,21 @@ def _proctee(
 
     return proc.returncode
 
+
 def proctee(
-        cmd: List[str],
+        cmd: list[str],
         stdout: Optional[io.TextIOBase],
         stderr: Optional[io.TextIOBase],
-        check: bool=False,
+        check: bool = False,
         **kwargs
-    ) -> Tuple[int, str, str]:
+        ) -> tuple[int, str, str]:
     if stdout is None:
         stdout = io.StringIO()
     if stderr is None:
         stderr = io.StringIO()
 
-    code = _proctee(cmd,
+    code = _proctee(
+            cmd,
             [stdout, sys.stdout],
             [stderr, sys.stderr],
             **kwargs)
@@ -98,16 +101,18 @@ def proctee(
                 stderr=stderr.getvalue())
     return code, stdout.getvalue(), stderr.getvalue()
 
+
 def proctee_joined(
-        cmd: List[str],
+        cmd: list[str],
         output: Optional[io.TextIOBase],
-        check: bool=False,
+        check: bool = False,
         **kwargs
-    ) -> Tuple[int, str]:
+        ) -> tuple[int, str]:
     if output is None:
         output = io.StringIO()
 
-    code = _proctee(cmd,
+    code = _proctee(
+            cmd,
             [output, sys.stdout],
             [output, sys.stderr],
             **kwargs)

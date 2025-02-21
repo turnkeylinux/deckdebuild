@@ -10,20 +10,20 @@
 from os.path import join, isdir, exists, dirname, lexists, relpath
 
 import os
-import os
 import sys
 import shutil
 import subprocess
 from subprocess import PIPE
-from typing import List
 from io import StringIO
 import shlex
 
 from libdeckdebuild import debsource
 from libdeckdebuild.proctee import proctee_joined, proctee
 
+
 class DeckDebuildError(Exception):
     pass
+
 
 def symlink(src, dst):
     if not exists(dirname(dst)):
@@ -35,37 +35,45 @@ def symlink(src, dst):
     os.symlink(src, dst)
     print(f'# ln -s {shlex.quote(src)} {shlex.quote(dst)}')
 
-def system(cmd: List[str], prefix=None):
+
+def system(cmd: list[str], prefix=None):
     proctee_joined(cmd, None, True, prefix=prefix)
 
-def get_returncode(cmd: List[str], prefix=None) -> int:
+
+def get_returncode(cmd: list[str], prefix=None) -> int:
     return proctee_joined(cmd, None, False, prefix=prefix)[0]
 
-def get_output(cmd: List[str], prefix=None) -> str:
+
+def get_output(cmd: list[str], prefix=None) -> str:
     return proctee(cmd, None, None, False, prefix=prefix)[1].rstrip()
+
 
 def get_source_dir(name, version):
     if ':' in version:
         version = version.split(':', 1)[1]
     return name + "-" + version
 
+
 def apply_faketime_patch(chroot, user):
 
-    patch_command = ["find", "-name", "configure", "-exec", "sed", "-i", "s/test \"$2\" = conftest.file/true/", "{}", ";"]
+    patch_command = ["find", "-name", "configure", "-exec",
+                     "sed", "-i", "s/test \"$2\" = conftest.file/true/",
+                     "{}", ";"]
 
     system(["chroot", chroot, "su", user, "-l", "-c", *patch_command])
+
 
 def deckdebuild(
         path: str,
         buildroot: str,
         output_dir: str,
-        preserve_build: bool=False,
-        user: str='build',
-        root_cmd: str='fakeroot',
-        satisfydepends_cmd: str='/usr/lib/pbuilder/pbuilder-satisfydepends',
-        faketime: bool=False,
-        vardir: str='/var/lib/deckdebuilds',
-        build_source: bool=False):
+        preserve_build: bool = False,
+        user: str = 'build',
+        root_cmd: str = 'fakeroot',
+        satisfydepends_cmd: str = '/usr/lib/pbuilder/pbuilder-satisfydepends',
+        faketime: bool = False,
+        vardir: str = '/var/lib/deckdebuilds',
+        build_source: bool = False):
 
     vardir = os.fspath(vardir)
 
@@ -151,16 +159,20 @@ def deckdebuild(
         faketime_fmt = debsource.get_mtime(path).strftime("%Y-%m-%d %H:%M:%S")
         build_cmd += f"faketime -f {shlex.quote(faketime_fmt)};"
 
+    build_cmd += "dpkg-buildpackage -d -uc -us"
+
     if build_source:
-        build_cmd += f"dpkg-buildpackage -d -uc -us -F -r{shlex.quote(root_cmdv)};"
+        build_cmd += f" -F -r{shlex.quote(root_cmdv)};"
     else:
-        build_cmd += f"dpkg-buildpackage -d -uc -us -b -r{shlex.quote(root_cmd)};"
+        build_cmd += f" -b -r{shlex.quote(root_cmd)};"
 
     trapped = StringIO()
     try:
-        proctee_joined(["chroot", chroot, "mount", "-t", "tmpfs", "none", "/dev/shm"],
+        proctee_joined(
+                ["chroot", chroot, "mount", "-t", "tmpfs", "none", "/dev/shm"],
                 output=trapped, check=True, prefix='mount')
-        proctee_joined(["chroot",  chroot, "su", user, "-l", "-c", build_cmd],
+        proctee_joined(
+                ["chroot",  chroot, "su", user, "-l", "-c", build_cmd],
                 output=trapped, check=True, prefix='dpkg-buildpackage')
     except Exception as e:
         import traceback

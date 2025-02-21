@@ -11,8 +11,10 @@ import re
 from debian import deb822
 from os.path import *
 
+
 class Error(Exception):
     pass
+
 
 def get_control_fields(path):
     controlfile = join(path, "debian/control")
@@ -21,23 +23,28 @@ def get_control_fields(path):
         control_dict.update(paragraph)
     return control_dict
 
+
 def get_packages(path):
     controlfile = join(path, "debian/control")
-    return [ re.sub(r'^.*?:', '', line).strip()
-             for line in open(controlfile).readlines()
-             if re.match(r'^Package:', line, re.I) ]
+    return [re.sub(r'^.*?:', '', line).strip()
+            for line in open(controlfile).readlines()
+            if re.match(r'^Package:', line, re.I)]
+
 
 def get_version(path):
     changelogfile = join(path, "debian/changelog")
 
     if not exists(changelogfile):
-        raise Error("no such file or directory `%s'" % changelogfile)
+        raise Error(f"no such file or directory `{changelogfile}'")
 
     for line in open(changelogfile).readlines():
-        m = re.match('^\w[-+0-9a-z.]* \(([^\(\) \t]+)\)(?:\s+[-+0-9a-z.]+)+\;',line, re.I)
+        m = re.match(
+                r'^\w[-+0-9a-z.]* \(([^\(\) \t]+)\)(?:\s+[-+0-9a-z.]+)+\;',
+                line, re.I)
         if m:
             return m.group(1)
-    raise Error("can't parse version from `%s'" % changelogfile)
+    raise Error(f"can't parse version from `{changelogfile}'")
+
 
 def get_mtime(path):
     from email.utils import parsedate
@@ -50,7 +57,7 @@ def get_mtime(path):
             continue
         break
 
-    m = re.match('.*>  (.*)', line)
+    m = re.match(r'.*>  (.*)', line)
     assert m
 
     return datetime.datetime(*parsedate(m.group(1))[:6])

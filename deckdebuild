@@ -73,7 +73,6 @@ class Conf(dict):
 
 def main():
     conf = Conf()
-
     parser = argparse.ArgumentParser(
              description="build a Debian package in a decked chroot")
     parser.add_argument("-r", "--root-cmd",
@@ -124,7 +123,8 @@ def main():
                         help="Path to output",
                         default=os.getcwd())
     args = parser.parse_args()
-    if get_host_arch != "amd64" and args.arch == "amd64":
+
+    if get_host_arch() != "amd64" and args.arch == "amd64":
         fatal("amd64 can only be built on amd64")
     try:
         deckdebuild(os.getcwd(),

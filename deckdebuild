@@ -67,7 +67,7 @@ class Config:
     def read_env(self, prefix: str = "DECKDEBUILD_") -> None:
         for environ_key in environ.keys():
             if environ_key.startswith(prefix):
-                key = environ_key[len(prefix):].lower()
+                key = environ_key[len(prefix) :].lower()
                 self._set_conf(key, environ[environ_key])
 
 
@@ -80,60 +80,64 @@ def main():
     conf = Config()
 
     parser = argparse.ArgumentParser(
-             description="build a Debian package in a decked chroot"
+        description="build a Debian package in a decked chroot"
     )
     parser.add_argument(
-        "-r", "--root-cmd",
+        "-r",
+        "--root-cmd",
         help=f"command used to gain root_privileges - default: {conf.root_cmd}"
-              " (env: DECKDEBUILD_ROOT_CMD)",
-        default=conf.root_cmd
+        " (env: DECKDEBUILD_ROOT_CMD)",
+        default=conf.root_cmd,
     )
     parser.add_argument(
-        "-u", "--user",
+        "-u",
+        "--user",
         help=f"build username (created if it doesn't exist) - default:"
-             f" {conf.user} (env: DECKDEBUILD_USER)",
-        default=conf.user
+        f" {conf.user} (env: DECKDEBUILD_USER)",
+        default=conf.user,
     )
     parser.add_argument(
-        "-p", "--preserve-build",
+        "-p",
+        "--preserve-build",
         help=f"don't remove build deck after build - default:"
-             f" {conf.preserve_build} (env: DECKDEBUILD_PRESERVE_BUILD)",
-        action=arg_action(conf.preserve_build)
+        f" {conf.preserve_build} (env: DECKDEBUILD_PRESERVE_BUILD)",
+        action=arg_action(conf.preserve_build),
     )
     parser.add_argument(
-        "-f", "--faketime",
+        "-f",
+        "--faketime",
         help=f"use faketime (must be installed) - default: {conf.faketime}"
-             " (env: DECKDEBUILD_FAKETIME)",
-        action=arg_action(conf.faketime)
+        " (env: DECKDEBUILD_FAKETIME)",
+        action=arg_action(conf.faketime),
     )
     parser.add_argument(
         "--satisfydepends-cmd",
         help="program used to satisfy build dependencies - default:"
-             f"{conf.satisfydepends_cmd} (env:"
-             " DECKDEBUILD_SATISFYDEPENDS_CMD)",
-        default=conf.satisfydepends_cmd
+        f"{conf.satisfydepends_cmd} (env:"
+        " DECKDEBUILD_SATISFYDEPENDS_CMD)",
+        default=conf.satisfydepends_cmd,
     )
     parser.add_argument(
         "--vardir",
         help=f"var data path - default: {conf.vardir} (env:"
-             " DECKDEBUILD_VARDIR)",
-        default=conf.vardir
+        " DECKDEBUILD_VARDIR)",
+        default=conf.vardir,
     )
     parser.add_argument(
-        "-b", "--build-source",
+        "-b",
+        "--build-source",
         help=f"Build source package too default: {conf.build_source} (env:"
-             " DECKDEBUILD_BUILD_SOURCE",
-        action=arg_action(conf.build_source)
+        " DECKDEBUILD_BUILD_SOURCE",
+        action=arg_action(conf.build_source),
     )
     parser.add_argument(
-        "path_to_buildroot",
-        help="Path to an exisiting buildroot"
+        "path_to_buildroot", help="Path to an exisiting buildroot"
     )
     parser.add_argument(
         "path_to_output_dir",
-        nargs='?',
+        nargs="?",
         help="Path to output - default: current directory",
-        default=os.getcwd()
+        default=os.getcwd(),
     )
     args = parser.parse_args()
     try:
@@ -147,7 +151,7 @@ def main():
             faketime=args.faketime,
             satisfydepends_cmd=args.satisfydepends_cmd,
             vardir=args.vardir,
-            build_source=args.build_source
+            build_source=args.build_source,
         )
     except DeckDebuildError as e:
         fatal(e)

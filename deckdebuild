@@ -11,15 +11,15 @@
 import argparse
 import os
 import sys
-from os import environ
 from dataclasses import dataclass
+from os import environ
 from typing import NoReturn
 
-from libdeckdebuild import deckdebuild, DeckDebuildError
+from libdeckdebuild import DeckDebuildError, deckdebuild
 
 
 def fatal(msg: str | DeckDebuildError) -> NoReturn:
-    print(f"error: {str(msg)}", file=sys.stderr)
+    print(f"error: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
@@ -40,11 +40,12 @@ class Config:
     path_to_output_dir: str = os.getcwd()
     CONF_FILE = "/etc/deckdebuild/deckdebuild.conf"
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.read_conf_file()
         self.read_env()
 
     def _set_conf(self, key: str, value: str) -> None:
+        real_value: str | bool
         if hasattr(self, key):
             if value.lower() == "true":
                 real_value = True
@@ -76,7 +77,7 @@ def arg_action(value: bool) -> str:
     return f"store_{bool_str}"
 
 
-def main():
+def main() -> None:
     conf = Config()
 
     parser = argparse.ArgumentParser(

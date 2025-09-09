@@ -1,11 +1,11 @@
-import subprocess
-from subprocess import PIPE, STDOUT
-from threading import Thread, Lock
-from typing import List, Tuple, Optional
-import shlex
-import sys
 import io
 import os
+import shlex
+import subprocess
+import sys
+from subprocess import PIPE, STDOUT
+from threading import Lock, Thread
+from typing import List, Optional, Tuple
 
 EXPERIMENTAL_COLORS = os.getenv("EXPERIMENTAL_COLORS", False)
 if EXPERIMENTAL_COLORS:

@@ -17,6 +17,8 @@ from typing import NoReturn
 
 from libdeckdebuild import DeckDebuildError, deckdebuild
 
+CONF_FILE = "/etc/deckdebuild/deckdebuild.conf"
+
 
 def fatal(msg: str | DeckDebuildError) -> NoReturn:
     print(f"error: {msg}", file=sys.stderr)
@@ -38,7 +40,6 @@ class Config:
     build_source: bool = False
     path_to_buildroot: str = ""
     path_to_output_dir: str = os.getcwd()
-    CONF_FILE = "/etc/deckdebuild/deckdebuild.conf"
 
     def __post_init__(self) -> None:
         self.read_conf_file()
@@ -59,7 +60,7 @@ class Config:
 
     def read_conf_file(self, conf_file: str = "") -> None:
         if not conf_file:
-            conf_file = self.CONF_FILE
+            conf_file = CONF_FILE
         with open(conf_file) as fob:
             for line in fob:
                 key, value = line.strip().split("=", 1)

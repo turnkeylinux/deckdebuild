@@ -17,7 +17,7 @@ from typing import NoReturn
 
 from libdeckdebuild import DeckDebuildError, deckdebuild
 
-CONF_FILE = "/etc/deckdebuild/deckdebuild.conf"
+CONF_FILE: str = "/etc/deckdebuild/deckdebuild.conf"
 
 
 def fatal(msg: str | DeckDebuildError) -> NoReturn:

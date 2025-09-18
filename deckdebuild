@@ -12,6 +12,7 @@ import argparse
 import os
 import sys
 from dataclasses import dataclass
+import dataclasses
 from os import environ
 from typing import NoReturn
 
@@ -47,7 +48,7 @@ class Config:
 
     def _set_conf(self, key: str, value: str) -> None:
         real_value: str | bool
-        if hasattr(self, key):
+        if key in dataclasses.asdict(self):
             if value.lower() == "true":
                 real_value = True
             elif value.lower() == "false":
@@ -64,7 +65,8 @@ class Config:
         with open(conf_file) as fob:
             for line in fob:
                 key, value = line.strip().split("=", 1)
-                self._set_conf(key, value)
+                key = key.replace('-', '_')
+                self._set_conf(key.strip(), value.strip())
 
     def read_env(self, prefix: str = "DECKDEBUILD_") -> None:
         for environ_key in environ.keys():

@@ -74,7 +74,7 @@ def deckdebuild(
     user: str = "build",
     root_cmd: str = "fakeroot",
     satisfydepends_cmd: str = "/usr/lib/pbuilder/pbuilder-satisfydepends",
-    faketime: bool = False,
+    faketime: bool = True,
     vardir: str = "/var/lib/deckdebuilds",
     build_source: bool = False,
 ) -> None:

@@ -35,7 +35,7 @@ class Config:
     root_cmd: str = "fakeroot"
     user: str = "build"
     preserve_build: bool = False
-    faketime: bool = False
+    faketime: bool = True
     satisfydepends_cmd: str = "/usr/lib/pbuilder/pbuilder-satisfydepends"
     vardir: str = "/var/lib/deckdebuilds"
     build_source: bool = False
@@ -103,14 +103,23 @@ def main() -> None:
     parser.add_argument(
         "-p",
         "--preserve-build",
+
         help=f"don't remove build deck after build - default:"
         f" {conf.preserve_build} (env: DECKDEBUILD_PRESERVE_BUILD)",
         action=arg_action(conf.preserve_build),
     )
-    parser.add_argument(
+    faketime_args = parser.add_mutually_exclusive_group()
+    faketime_args.add_argument(
         "-f",
         "--faketime",
         help=f"use faketime (must be installed) - default: {conf.faketime}"
+        " (env: DECKDEBUILD_FAKETIME)",
+        action=arg_action(conf.faketime),
+    )
+    faketime_args.add_argument(
+        "-n",
+        "--no-faketime",
+        help=f"do not use faketime - default: {conf.faketime}"
         " (env: DECKDEBUILD_FAKETIME)",
         action=arg_action(conf.faketime),
     )

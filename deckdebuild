@@ -34,7 +34,7 @@ def warning(msg: str) -> None:
 class Config:
     root_cmd: str = "fakeroot"
     user: str = "build"
-    preserve_build: bool = False
+    preserve_build: str = "on-error"
     faketime: bool = True
     satisfydepends_cmd: str = "/usr/lib/pbuilder/pbuilder-satisfydepends"
     vardir: str = "/var/lib/deckdebuilds"
@@ -48,6 +48,7 @@ class Config:
 
     def _set_conf(self, key: str, value: str) -> None:
         real_value: str | bool
+        key.replace("-", "_")
         if key in dataclasses.asdict(self):
             if value.lower() == "true":
                 real_value = True
@@ -99,6 +100,31 @@ def main() -> None:
         help=f"build username (created if it doesn't exist) - default:"
         f" {conf.user} (env: DECKDEBUILD_USER)",
         default=conf.user,
+    )
+    buildroot_cleanup_args = parser.add_mutually_exclusive_group()
+    buildroot_cleanup_args.add_argument(
+        "-e",
+        "--preserve-buildroot-on-error",
+        action="store_const",
+        const="error",
+        dest="preserve_buildroot",
+        help="leave build chroot intact after build if failure (default)",
+    )
+    buildroot_cleanup_args.add_argument(
+        "-p",
+        "--preserve-buildroot-always",
+        action="store_const",
+        const="always",
+        dest="preserve_buildroot",
+        help="always leave build chroot intact after build",
+    )
+    buildroot_cleanup_args.add_argument(
+        "-n",
+        "--preserve-buildroot-never",
+        action="store_const",
+        const="never",
+        dest="preserve_buildroot",
+        help="never leave build chroot intact after build",
     )
     parser.add_argument(
         "-p",

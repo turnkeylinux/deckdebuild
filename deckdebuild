@@ -9,10 +9,10 @@
 # option) any later version.
 
 import argparse
+import dataclasses
 import os
 import sys
 from dataclasses import dataclass
-import dataclasses
 from os import environ
 from typing import NoReturn
 
@@ -65,7 +65,7 @@ class Config:
         with open(conf_file) as fob:
             for line in fob:
                 key, value = line.strip().split("=", 1)
-                key = key.replace('-', '_')
+                key = key.replace("-", "_")
                 self._set_conf(key.strip(), value.strip())
 
     def read_env(self, prefix: str = "DECKDEBUILD_") -> None:

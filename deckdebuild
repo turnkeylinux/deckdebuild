@@ -143,7 +143,7 @@ def main() -> None:
         action=arg_action(conf.faketime),
     )
     faketime_args.add_argument(
-        "-n",
+        "-N",
         "--no-faketime",
         help=f"do not use faketime - default: {conf.faketime}"
         " (env: DECKDEBUILD_FAKETIME)",

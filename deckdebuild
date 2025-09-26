@@ -65,6 +65,15 @@ class Config:
             conf_file = CONF_FILE
         with open(conf_file) as fob:
             for line in fob:
+                line = line.strip()
+                if not line:
+                    continue
+                if "#" in line:
+                    line = line.split("#")[0].strip()
+                    if not line:
+                        continue
+                if "=" not in line:
+                    fatal(f"invalid config line ('=' not found): '{line}'")
                 key, value = line.strip().split("=", 1)
                 key = key.replace("-", "_")
                 self._set_conf(key.strip(), value.strip())

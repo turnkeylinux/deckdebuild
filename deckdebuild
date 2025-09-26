@@ -126,13 +126,13 @@ def main() -> None:
         dest="preserve_buildroot",
         help="never leave build chroot intact after build",
     )
-    parser.add_argument(
+    buildroot_cleanup_args.add_argument(
         "-p",
         "--preserve-build",
-
-        help=f"don't remove build deck after build - default:"
-        f" {conf.preserve_build} (env: DECKDEBUILD_PRESERVE_BUILD)",
-        action=arg_action(conf.preserve_build),
+        action="store_const",
+        const="always",
+        dest="preserve_buildroot",
+        help="deprecated - same as '--preserve-buildroot-always'",
     )
     faketime_args = parser.add_mutually_exclusive_group()
     faketime_args.add_argument(

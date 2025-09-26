@@ -1,4 +1,4 @@
-# Copyright (c) TurnKey GNU/Linux - http://www.turnkeylinux.org
+# Copyright (c) TurnKey GNU/Linux - https//www.turnkeylinux.org
 #
 # This file is part of DeckDebuild
 #
@@ -49,22 +49,6 @@ def get_source_dir(name: str, version: str) -> str:
     if ":" in version:
         version = version.split(":", 1)[1]
     return name + "-" + version
-
-
-def apply_faketime_patch(chroot: str, user: str) -> None:
-    patch_command = [
-        "find",
-        "-name",
-        "configure",
-        "-exec",
-        "sed",
-        "-i",
-        's/test "$2" = conftest.file/true/',
-        "{}",
-        ";",
-    ]
-
-    system(["chroot", chroot, "su", user, "-l", "-c", *patch_command])
 
 
 def deckdebuild(
@@ -163,9 +147,6 @@ def deckdebuild(
             os.chown(join(root, fn), build_uid_int, build_gid_int)
     os.chown(chr_source_dir, build_uid_int, build_gid_int)
     os.chdir(orig_cwd)
-
-    if faketime:
-        apply_faketime_patch(chroot, user)
 
     # create link to build directory in chroot
     build_dir = chroot + user_home

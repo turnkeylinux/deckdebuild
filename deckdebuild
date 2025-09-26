@@ -65,6 +65,15 @@ class Config:
             conf_file = CONF_FILE
         with open(conf_file) as fob:
             for line in fob:
+                line = line.strip()
+                if not line:
+                    continue
+                if "#" in line:
+                    line = line.split("#")[0].strip()
+                    if not line:
+                        continue
+                if "=" not in line:
+                    fatal(f"invalid config line ('=' not found): '{line}'")
                 key, value = line.strip().split("=", 1)
                 key = key.replace("-", "_")
                 self._set_conf(key.strip(), value.strip())
@@ -127,7 +136,7 @@ def main() -> None:
         help="never leave build chroot intact after build",
     )
     buildroot_cleanup_args.add_argument(
-        "-p",
+        "-P",
         "--preserve-build",
         action="store_const",
         const="always",
@@ -186,7 +195,7 @@ def main() -> None:
             args.path_to_output_dir,
             root_cmd=args.root_cmd,
             user=args.user,
-            preserve_build=args.preserve_build,
+            preserve_build=args.preserve_buildroot,
             faketime=args.faketime,
             satisfydepends_cmd=args.satisfydepends_cmd,
             vardir=args.vardir,

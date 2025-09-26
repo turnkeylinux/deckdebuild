@@ -3,9 +3,9 @@ import os
 import shlex
 import subprocess
 import sys
-from subprocess import PIPE, STDOUT
+from subprocess import PIPE
 from threading import Lock, Thread
-from typing import List, Optional, Tuple
+from typing import TextIO
 
 EXPERIMENTAL_COLORS = os.getenv("EXPERIMENTAL_COLORS", False)
 if EXPERIMENTAL_COLORS:
@@ -19,11 +19,11 @@ if EXPERIMENTAL_COLORS:
 
 
 def _proctee(
-    cmd: List[str],
-    stdout_sinks: List[io.TextIOBase],
-    stderr_sinks: List[io.TextIOBase],
-    prefix: Optional[str] = None,
-    **kwargs,
+    cmd: list[str],
+    stdout_sinks: list[TextIO],
+    stderr_sinks: list[TextIO],
+    prefix: str | None = None,
+    **kwargs,  # noqa: ANN003
 ) -> int:
     if prefix is None:
         prefix = ""
@@ -39,7 +39,7 @@ def _proctee(
     )
     lock = Lock()
 
-    def reader(io_in: io.TextIOBase, io_out: List[io.TextIOBase]):
+    def reader(io_in: io.StringIO, io_out: list[io.StringIO]) -> None:
         buff = ""
         while True:
             buff += io_in.read(1)
@@ -71,12 +71,12 @@ def _proctee(
 
 
 def proctee(
-    cmd: List[str],
-    stdout: Optional[io.TextIOBase],
-    stderr: Optional[io.TextIOBase],
+    cmd: list[str],
+    stdout: io.StringIO | None,
+    stderr: io.StringIO | None,
     check: bool = False,
-    **kwargs,
-) -> Tuple[int, str, str]:
+    **kwargs,  # noqa: ANN003
+) -> tuple[int, str, str]:
     if stdout is None:
         stdout = io.StringIO()
     if stderr is None:
@@ -87,19 +87,18 @@ def proctee(
         raise subprocess.CalledProcessError(
             returncode=code,
             cmd=cmd,
-            output=None,
-            stdout=stdout.getvalue(),
+            output=stdout.getvalue(),
             stderr=stderr.getvalue(),
         )
     return code, stdout.getvalue(), stderr.getvalue()
 
 
 def proctee_joined(
-    cmd: List[str],
-    output: Optional[io.TextIOBase],
+    cmd: list[str],
+    output: io.StringIO | None,
     check: bool = False,
-    **kwargs,
-) -> Tuple[int, str]:
+    **kwargs,  # noqa: ANN003
+) -> tuple[int, str]:
     if output is None:
         output = io.StringIO()
 

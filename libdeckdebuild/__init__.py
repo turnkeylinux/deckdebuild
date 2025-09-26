@@ -10,6 +10,7 @@
 import os
 import shlex
 import shutil
+import sys
 from io import StringIO
 from os.path import dirname, exists, isdir, join, lexists, relpath
 
@@ -70,11 +71,11 @@ def deckdebuild(
     path: str,
     buildroot: str,
     output_dir: str,
-    preserve_build: bool = False,
+    preserve_build: str = "error",
     user: str = "build",
     root_cmd: str = "fakeroot",
     satisfydepends_cmd: str = "/usr/lib/pbuilder/pbuilder-satisfydepends",
-    faketime: bool = False,
+    faketime: bool = True,
     vardir: str = "/var/lib/deckdebuilds",
     build_source: bool = False,
 ) -> None:
@@ -84,7 +85,9 @@ def deckdebuild(
     path_builds = join(vardir, "builds")
 
     if not isdir(buildroot):
-        raise DeckDebuildError(f"buildroot `{buildroot}' is not a directory")
+        raise DeckDebuildError(
+            f"buildroot chroot `{buildroot}' is not a directory"
+        )
 
     source_name = debsource.get_control_fields(path)["Source"]
     source_version = debsource.get_version(path)
@@ -97,10 +100,14 @@ def deckdebuild(
 
     # delete deck if it already exists
     if exists(chroot):
+        print(
+            f"warning: build chroot deck '{chroot}' exists; removing",
+            file=sys.stderr
+        )
         system(["deck", "-D", chroot], prefix="undeck")
 
     # create new deck from the correct buildroot
-    print("creating deck", chroot)
+    print(f"creating build chroot deck: {chroot}")
     system(["deck", buildroot, chroot], prefix="deck")
 
     # satisfy dependencies
@@ -182,6 +189,7 @@ def deckdebuild(
         )
 
     trapped = StringIO()
+    error = False
     try:
         proctee_joined(
             ["chroot", chroot, "mount", "-t", "tmpfs", "none", "/dev/shm"],
@@ -197,8 +205,8 @@ def deckdebuild(
         )
     except Exception:
         import traceback
-
         traceback.print_exc()
+        error = True
     finally:
         system(["umount", "-f", join(chroot, "dev/shm")])
 
@@ -221,6 +229,7 @@ def deckdebuild(
             and not fname.endswith(".tar.gz")
             and not fname.endswith(".tar.bz2")
         ):
+            error = True
             continue
 
         if fname.split("_")[0] in packages:
@@ -230,9 +239,24 @@ def deckdebuild(
             print(f"# cp {shlex.quote(src)} {shlex.quote(dst)}")
             shutil.copyfile(src, dst)
 
-    if not preserve_build:
+    if error:
+        print(
+            f"building {source_name}_{source_version} package failed"
+            f"\n - see build log ({build_log}) &/or previous output for info",
+            file=sys.stderr,
+        )
+    else:
+        print(f"built {source_name}_{source_version} successfully")
+    preserve_reason = f"(preserve-build = {preserve_build}; error = {error})"
+    if (
+        preserve_build == "never"
+        or (not error and preserve_build == "on-error")
+    ):
+        print(f"deleting {chroot} {preserve_reason}")
         os.seteuid(0)
         system(["deck", "-D", chroot], prefix="undeck")
         os.remove(build_link)
+    else:
+        print(f"retaining {chroot} {preserve_reason}")
 
     os.setreuid(orig_uid, 0)

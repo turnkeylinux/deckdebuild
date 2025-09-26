@@ -1,4 +1,4 @@
-# Copyright (c) TurnKey GNU/Linux - http://www.turnkeylinux.org
+# Copyright (c) TurnKey GNU/Linux - https://www.turnkeylinux.org
 #
 # This file is part of DeckDebuild
 #
@@ -12,7 +12,9 @@ from datetime import datetime
 from email.utils import parsedate
 from os.path import exists, join
 
-from debian import deb822
+# Not sure why mypy thinks debian module doesn't have deb822 submodule? But it
+# definately does!
+from debian import deb822  # type: ignore[attr-defined]
 
 
 class DebSourceError(Exception):
@@ -54,7 +56,6 @@ def get_version(path: str) -> str:
 
 
 def get_mtime(path: str) -> datetime:
-
     changelogfile = join(path, "debian/changelog")
 
     for line in open(changelogfile).readlines():

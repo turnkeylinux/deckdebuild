@@ -169,7 +169,7 @@ def deckdebuild(
 
     if faketime:
         faketime_fmt = debsource.get_mtime(path).strftime("%Y-%m-%d %H:%M:%S")
-        build_cmd += f"faketime -f {shlex.quote(faketime_fmt)};"
+        build_cmd += f"faketime -f {shlex.quote(faketime_fmt)} "
 
     if build_source:
         build_cmd += (

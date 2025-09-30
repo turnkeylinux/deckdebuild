@@ -55,7 +55,7 @@ def deckdebuild(
     path: str,
     buildroot: str,
     output_dir: str,
-    preserve_build: str = "error",
+    preserve_build: str = "on-error",
     user: str = "build",
     root_cmd: str = "fakeroot",
     satisfydepends_cmd: str = "/usr/lib/pbuilder/pbuilder-satisfydepends",
@@ -63,6 +63,12 @@ def deckdebuild(
     vardir: str = "/var/lib/deckdebuilds",
     build_source: bool = False,
 ) -> None:
+    preserve_build_opts = ("never", "always", "on-error")
+    if preserve_build not in preserve_build_opts:
+        raise DeckDebuildError(
+            "invalid preserve_build value, must be one of"
+            f" {'|'.join(preserve_build_opts)}"
+        )
     vardir = os.fspath(vardir)
 
     path_chroots = join(vardir, "chroots")

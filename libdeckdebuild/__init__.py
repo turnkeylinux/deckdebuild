@@ -86,7 +86,7 @@ def deckdebuild(
     if exists(chroot):
         print(
             f"warning: build chroot deck '{chroot}' exists; removing",
-            file=sys.stderr
+            file=sys.stderr,
         )
         system(["deck", "-D", chroot], prefix="undeck")
 
@@ -130,7 +130,7 @@ def deckdebuild(
                 user,
                 "-l",
                 "-c",
-                'cat /etc/passwd | grep build | cut -d":" -f3,4',
+                "grep '^build:' /etc/passwd | cut -d':' -f3,4",
             ],
             prefix="get uid",
         )
@@ -186,6 +186,7 @@ def deckdebuild(
         )
     except Exception:
         import traceback
+
         traceback.print_exc()
         error = True
     finally:
@@ -229,9 +230,8 @@ def deckdebuild(
     else:
         print(f"built {source_name}_{source_version} successfully")
     preserve_reason = f"(preserve-build = {preserve_build}; error = {error})"
-    if (
-        preserve_build == "never"
-        or (not error and preserve_build == "on-error")
+    if preserve_build == "never" or (
+        not error and preserve_build == "on-error"
     ):
         print(f"deleting {chroot} {preserve_reason}")
         os.seteuid(0)

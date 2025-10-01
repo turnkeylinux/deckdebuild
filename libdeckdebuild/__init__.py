@@ -80,7 +80,12 @@ def deckdebuild(
     chroot = join(path_chroots, source_dir)
 
     orig_uid = os.getuid()
-    os.setuid(0)
+    try:
+        os.setuid(0)
+    except PermissionError as e:
+        raise DeckDebuildError(
+            "deckdebuild requires root - please rerun with sudo"
+        ) from e
 
     # delete deck if it already exists
     if exists(chroot):

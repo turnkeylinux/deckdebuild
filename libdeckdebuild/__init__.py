@@ -10,7 +10,9 @@
 import os
 import shlex
 import shutil
+import subprocess
 import sys
+from datetime import datetime, timezone
 from io import StringIO
 from os.path import dirname, exists, isdir, join, lexists, relpath
 
@@ -168,8 +170,40 @@ def deckdebuild(
     build_cmd = f"cd {shlex.quote(source_dir)};"
 
     if faketime:
-        faketime_fmt = debsource.get_mtime(path).strftime("%Y-%m-%d %H:%M:%S")
-        build_cmd += f"faketime -f {shlex.quote(faketime_fmt)} "
+        dt_format = "%Y-%m-%d %H:%M:%S"
+        print("getting timestamp to use with faketime")
+        # set a timestamp for use with faketime
+        git_dir = join(chr_source_dir, ".git")
+        if isdir(git_dir):
+            # if source is a git repo, use the real mtime of the
+            # 'debian/control' file via git log - the rationale is:
+            # - TKL pkg changelog is dynamically generated so last changelog
+            #   date is not reproducable
+            # - filesystem mtime of git controlled files is also not
+            #   reproducable
+            get_time_cmd = [
+                "/usr/bin/git",
+                f"--git-dir={git_dir}",
+                "log",
+                "-1",
+                "--format=%ad",
+                "--date=iso",
+                "--",
+                "debian/control",
+            ]
+            iso_timestamp = subprocess.run(
+                get_time_cmd, capture_output=True, text=True
+            ).stdout.strip()
+            fake_dt = (
+                datetime.fromisoformat(iso_timestamp)
+                .astimezone(timezone.utc)
+                .strftime(dt_format)
+            )
+        else:
+            # fallback to using the last changelog entry date
+            fake_dt = debsource.get_mtime(path).strftime(dt_format)
+        print(f"using timestamp {fake_dt}")
+        build_cmd += f"faketime -f {shlex.quote(fake_dt)} "
 
     if build_source:
         build_cmd += (

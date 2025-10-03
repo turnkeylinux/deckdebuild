@@ -10,7 +10,9 @@
 import os
 import shlex
 import shutil
+import subprocess
 import sys
+from datetime import datetime, timezone
 from io import StringIO
 from os.path import dirname, exists, isdir, join, lexists, relpath
 
@@ -55,7 +57,7 @@ def deckdebuild(
     path: str,
     buildroot: str,
     output_dir: str,
-    preserve_build: str = "error",
+    preserve_build: str = "on-error",
     user: str = "build",
     root_cmd: str = "fakeroot",
     satisfydepends_cmd: str = "/usr/lib/pbuilder/pbuilder-satisfydepends",
@@ -63,6 +65,12 @@ def deckdebuild(
     vardir: str = "/var/lib/deckdebuilds",
     build_source: bool = False,
 ) -> None:
+    preserve_build_opts = ("never", "always", "on-error")
+    if preserve_build not in preserve_build_opts:
+        raise DeckDebuildError(
+            "invalid preserve_build value, must be one of"
+            f" {'|'.join(preserve_build_opts)}"
+        )
     vardir = os.fspath(vardir)
 
     path_chroots = join(vardir, "chroots")
@@ -80,13 +88,18 @@ def deckdebuild(
     chroot = join(path_chroots, source_dir)
 
     orig_uid = os.getuid()
-    os.setuid(0)
+    try:
+        os.setuid(0)
+    except PermissionError as e:
+        raise DeckDebuildError(
+            "deckdebuild requires root - please rerun with sudo"
+        ) from e
 
     # delete deck if it already exists
     if exists(chroot):
         print(
             f"warning: build chroot deck '{chroot}' exists; removing",
-            file=sys.stderr
+            file=sys.stderr,
         )
         system(["deck", "-D", chroot], prefix="undeck")
 
@@ -130,7 +143,7 @@ def deckdebuild(
                 user,
                 "-l",
                 "-c",
-                'cat /etc/passwd | grep build | cut -d":" -f3,4',
+                "grep '^build:' /etc/passwd | cut -d':' -f3,4",
             ],
             prefix="get uid",
         )
@@ -157,8 +170,40 @@ def deckdebuild(
     build_cmd = f"cd {shlex.quote(source_dir)};"
 
     if faketime:
-        faketime_fmt = debsource.get_mtime(path).strftime("%Y-%m-%d %H:%M:%S")
-        build_cmd += f"faketime -f {shlex.quote(faketime_fmt)};"
+        dt_format = "%Y-%m-%d %H:%M:%S"
+        print("getting timestamp to use with faketime")
+        # set a timestamp for use with faketime
+        git_dir = join(chr_source_dir, ".git")
+        if isdir(git_dir):
+            # if source is a git repo, use the real mtime of the
+            # 'debian/control' file via git log - the rationale is:
+            # - TKL pkg changelog is dynamically generated so last changelog
+            #   date is not reproducable
+            # - filesystem mtime of git controlled files is also not
+            #   reproducable
+            get_time_cmd = [
+                "/usr/bin/git",
+                f"--git-dir={git_dir}",
+                "log",
+                "-1",
+                "--format=%ad",
+                "--date=iso",
+                "--",
+                "debian/control",
+            ]
+            iso_timestamp = subprocess.run(
+                get_time_cmd, capture_output=True, text=True
+            ).stdout.strip()
+            fake_dt = (
+                datetime.fromisoformat(iso_timestamp)
+                .astimezone(timezone.utc)
+                .strftime(dt_format)
+            )
+        else:
+            # fallback to using the last changelog entry date
+            fake_dt = debsource.get_mtime(path).strftime(dt_format)
+        print(f"using timestamp {fake_dt}")
+        build_cmd += f"faketime -f {shlex.quote(fake_dt)} "
 
     if build_source:
         build_cmd += (
@@ -186,6 +231,7 @@ def deckdebuild(
         )
     except Exception:
         import traceback
+
         traceback.print_exc()
         error = True
     finally:
@@ -201,6 +247,7 @@ def deckdebuild(
     # copy packages
     packages = debsource.get_packages(path)
 
+    copied_deb = False
     for fname in os.listdir(build_dir):
         if (
             not fname.endswith(".deb")
@@ -210,7 +257,6 @@ def deckdebuild(
             and not fname.endswith(".tar.gz")
             and not fname.endswith(".tar.bz2")
         ):
-            error = True
             continue
 
         if fname.split("_")[0] in packages:
@@ -219,8 +265,12 @@ def deckdebuild(
 
             print(f"# cp {shlex.quote(src)} {shlex.quote(dst)}")
             shutil.copyfile(src, dst)
+            # assume that at least one .deb/.udeb copied == success
+            if fname.endswith("deb"):
+                copied_deb = True
 
-    if error:
+    if error or not copied_deb:
+        error = True
         print(
             f"building {source_name}_{source_version} package failed"
             f"\n - see build log ({build_log}) &/or previous output for info",
@@ -229,9 +279,8 @@ def deckdebuild(
     else:
         print(f"built {source_name}_{source_version} successfully")
     preserve_reason = f"(preserve-build = {preserve_build}; error = {error})"
-    if (
-        preserve_build == "never"
-        or (not error and preserve_build == "on-error")
+    if preserve_build == "never" or (
+        not error and preserve_build == "on-error"
     ):
         print(f"deleting {chroot} {preserve_reason}")
         os.seteuid(0)

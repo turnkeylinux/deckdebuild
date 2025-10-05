@@ -36,15 +36,24 @@ def symlink(src: str, dst: str) -> None:
 
 
 def system(cmd: list[str], prefix: str | None = None) -> None:
-    proctee_joined(cmd, None, True, prefix=prefix)
+    try:
+        proctee_joined(cmd, None, True, prefix=prefix)
+    except subprocess.CalledProcessError as e:
+        raise DeckDebuildError(e) from e
 
 
 def get_returncode(cmd: list[str], prefix: str | None = None) -> int:
-    return proctee_joined(cmd, None, False, prefix=prefix)[0]
+    try:
+        return proctee_joined(cmd, None, False, prefix=prefix)[0]
+    except subprocess.CalledProcessError as e:
+        raise DeckDebuildError(e) from e
 
 
 def get_output(cmd: list[str], prefix: str | None = None) -> str:
-    return proctee(cmd, None, None, False, prefix=prefix)[1].rstrip()
+    try:
+        return proctee(cmd, None, None, False, prefix=prefix)[1].rstrip()
+    except subprocess.CalledProcessError as e:
+        raise DeckDebuildError(e) from e
 
 
 def get_source_dir(name: str, version: str) -> str:

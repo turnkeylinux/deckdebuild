@@ -208,10 +208,10 @@ def deckdebuild(
             # files created during package build have newer mtime that existing
             # files, touch all files with faketime timestamp
             fake_dt_timestamp = fake_dt_obj.timestamp()
-            for base, _, files in os.walk(chr_source_dir):
-                for file in files:
+            for base, dirs, files in os.walk(chr_source_dir):
+                for path in dirs + files:
                     os.utime(
-                        join(base, file),
+                        join(base, path),
                         times=(fake_dt_timestamp, fake_dt_timestamp)
                     )
             fake_dt = fake_dt_obj.strftime(dt_format)

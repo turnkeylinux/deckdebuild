@@ -184,30 +184,37 @@ def deckdebuild(
         # set a timestamp for use with faketime
         git_dir = join(chr_source_dir, ".git")
         if isdir(git_dir):
-            # if source is a git repo, use the real mtime of the
-            # 'debian/control' file via git log - the rationale is:
-            # - TKL pkg changelog is dynamically generated so last changelog
-            #   date is not reproducable
-            # - filesystem mtime of git controlled files is also not
-            #   reproducable
+            # if source is a git repo, use the timestamp of the most recent
+            # commit; the rationale is:
+            # - the TKL package changelog is dynamically generated so last
+            #   changelog date is not reproducable
             get_time_cmd = [
                 "/usr/bin/git",
                 f"--git-dir={git_dir}",
-                "log",
-                "-1",
+                "show",
+                "--summary",
                 "--format=%ad",
                 "--date=iso",
-                "--",
-                "debian/control",
+                "HEAD",
             ]
             iso_timestamp = subprocess.run(
                 get_time_cmd, capture_output=True, text=True
             ).stdout.strip()
-            fake_dt = (
+            fake_dt_obj = (
                 datetime.fromisoformat(iso_timestamp)
                 .astimezone(timezone.utc)
-                .strftime(dt_format)
             )
+            # mtime of files will be time of git clone, so to ensure that any
+            # files created during package build have newer mtime that existing
+            # files, touch all files with faketime timestamp
+            fake_dt_timestamp = fake_dt_obj.timestamp()
+            for base, dirs, files in os.walk(chr_source_dir):
+                for path in dirs + files:
+                    os.utime(
+                        join(base, path),
+                        times=(fake_dt_timestamp, fake_dt_timestamp)
+                    )
+            fake_dt = fake_dt_obj.strftime(dt_format)
         else:
             # fallback to using the last changelog entry date
             fake_dt = debsource.get_mtime(path).strftime(dt_format)

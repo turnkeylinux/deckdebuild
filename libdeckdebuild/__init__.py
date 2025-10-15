@@ -209,9 +209,9 @@ def deckdebuild(
             # files, touch all files with faketime timestamp
             fake_dt_timestamp = fake_dt_obj.timestamp()
             for base, dirs, files in os.walk(chr_source_dir):
-                for path in dirs + files:
+                for repo_path in dirs + files:
                     os.utime(
-                        join(base, path),
+                        join(base, repo_path),
                         times=(fake_dt_timestamp, fake_dt_timestamp)
                     )
             fake_dt = fake_dt_obj.strftime(dt_format)

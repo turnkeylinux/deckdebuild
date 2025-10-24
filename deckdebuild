@@ -110,38 +110,15 @@ def main() -> None:
         f" {conf.user} (env: DECKDEBUILD_USER)",
         default=conf.user,
     )
-    buildroot_cleanup_args = parser.add_mutually_exclusive_group()
-    buildroot_cleanup_args.add_argument(
-        "-e",
-        "--preserve-buildroot-on-error",
-        action="store_const",
-        const="on-error",
-        dest="preserve_buildroot",
-        help="leave build chroot intact after build if failure (default)",
-    )
-    buildroot_cleanup_args.add_argument(
+    parser.add_argument(
         "-p",
-        "--preserve-buildroot-always",
-        action="store_const",
-        const="always",
-        dest="preserve_buildroot",
-        help="always leave build chroot intact after build",
-    )
-    buildroot_cleanup_args.add_argument(
-        "-n",
-        "--preserve-buildroot-never",
-        action="store_const",
-        const="never",
-        dest="preserve_buildroot",
-        help="never leave build chroot intact after build",
-    )
-    buildroot_cleanup_args.add_argument(
-        "-P",
-        "--preserve-build",
-        action="store_const",
-        const="always",
-        dest="preserve_buildroot",
-        help="deprecated - same as '--preserve-buildroot-always'",
+        "--preserve-buildroot",
+        nargs='?',
+        choices = ["always", "never", "on-error"],
+        help="whether to preserve buildroot after "
+        f"build - default: {conf.preserve_build}"
+        " (env: DECKDEBUILD_PRESERVE_BUILD)",
+        default=conf.preserve_build
     )
     faketime_args = parser.add_mutually_exclusive_group()
     faketime_args.add_argument(

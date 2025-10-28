@@ -199,7 +199,7 @@ def deckdebuild(
             ]
             iso_timestamp = subprocess.run(
                 get_time_cmd, capture_output=True, text=True
-            ).stdout.strip()
+            ).stdout.strip("\n")[0]
             fake_dt_obj = (
                 datetime.fromisoformat(iso_timestamp)
                 .astimezone(timezone.utc)

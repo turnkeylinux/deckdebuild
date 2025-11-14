@@ -39,6 +39,7 @@ class Config:
     satisfydepends_cmd: str = "/usr/lib/pbuilder/pbuilder-satisfydepends"
     vardir: str = "/var/lib/deckdebuilds"
     build_source: bool = False
+    mount_proc: bool = False
     path_to_buildroot: str = ""
     path_to_output_dir: str = os.getcwd()
 
@@ -156,6 +157,13 @@ def main() -> None:
         action=arg_action(conf.build_source),
     )
     parser.add_argument(
+        "-P",
+        "--mount-proc",
+        help=f"Mount /proc in buildroot - default: {conf.mount_proc} (env:"
+        " DECKDEBUILD_MOUNT_PROC",
+        action=arg_action(conf.mount_proc),
+    )
+    parser.add_argument(
         "path_to_buildroot", help="Path to an exisiting buildroot"
     )
     parser.add_argument(
@@ -177,6 +185,7 @@ def main() -> None:
             satisfydepends_cmd=args.satisfydepends_cmd,
             vardir=args.vardir,
             build_source=args.build_source,
+            mount_proc=args.mount_proc,
         )
     except DeckDebuildError as e:
         fatal(e)

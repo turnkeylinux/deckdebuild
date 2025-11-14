@@ -73,6 +73,7 @@ def deckdebuild(
     faketime: bool = True,
     vardir: str = "/var/lib/deckdebuilds",
     build_source: bool = False,
+    mount_proc: bool = False,
 ) -> None:
     preserve_build_opts = ("never", "always", "on-error")
     if preserve_build not in preserve_build_opts:
@@ -239,6 +240,13 @@ def deckdebuild(
             check=True,
             prefix="mount",
         )
+        if mount_proc:
+            proctee_joined(
+                ["chroot", chroot, "mount", "-t", "proc", "none", "/proc"],
+                output=trapped,
+                check=True,
+                prefix="mount",
+            )
         proctee_joined(
             ["chroot", chroot, "su", user, "-l", "-c", build_cmd],
             output=trapped,
@@ -252,6 +260,8 @@ def deckdebuild(
         error = True
     finally:
         system(["umount", "-f", join(chroot, "dev/shm")])
+        if mount_proc:
+            system(["umount", "-f", join(chroot, "proc")])
 
     os.seteuid(orig_uid)
     output = trapped.getvalue()

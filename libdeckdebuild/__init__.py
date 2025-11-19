@@ -108,13 +108,13 @@ def deckdebuild(
     # delete deck if it already exists
     if exists(chroot):
         print(
-            f"warning: build chroot deck '{chroot}' exists; removing",
+            f"# warning: build chroot deck '{chroot}' exists; removing",
             file=sys.stderr,
         )
         system(["deck", "-D", chroot], prefix="undeck")
 
     # create new deck from the correct buildroot
-    print(f"creating build chroot deck: {chroot}")
+    print(f"# creating build chroot deck: {chroot}")
     system(["deck", buildroot, chroot], prefix="deck")
 
     # satisfy dependencies
@@ -219,7 +219,7 @@ def deckdebuild(
         else:
             # fallback to using the last changelog entry date
             fake_dt = debsource.get_mtime(path).strftime(dt_format)
-        print(f"using timestamp {fake_dt}")
+        print(f"# using timestamp {fake_dt}")
         build_cmd += f"faketime -f {shlex.quote(fake_dt)} "
 
     if build_source:

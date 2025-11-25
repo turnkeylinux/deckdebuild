@@ -181,7 +181,7 @@ def deckdebuild(
 
     if faketime:
         dt_format = "%Y-%m-%d %H:%M:%S"
-        print("getting timestamp to use with faketime")
+        print("# getting timestamp to use with faketime")
         # set a timestamp for use with faketime
         git_dir = join(chr_source_dir, ".git")
         if isdir(git_dir):

@@ -101,14 +101,14 @@ def main() -> None:
         "-r",
         "--root-cmd",
         help=f"command used to gain root_privileges - default: {conf.root_cmd}"
-        f" (env: DECKDEBUILD_ROOT_CMD={conf.root_cmd})",
+        f" (env: DECKDEBUILD_ROOT_CMD=fakeroot)",
         default=conf.root_cmd,
     )
     parser.add_argument(
         "-u",
         "--user",
         help=f"build username (created if it doesn't exist) - default:"
-        f" {conf.user} (env: DECKDEBUILD_USER={conf.user})",
+        f" {conf.user} (env: DECKDEBUILD_USER=build)",
         default=conf.user,
     )
     parser.add_argument(
@@ -118,7 +118,7 @@ def main() -> None:
         choices = ["always", "never", "on-error"],
         help="whether to preserve buildroot after "
         f"build - default: {conf.preserve_build}"
-        f" (env: DECKDEBUILD_PRESERVE_BUILD={conf.preserve_build})",
+        f" (env: DECKDEBUILD_PRESERVE_BUILD=on-error)",
         default=conf.preserve_build
     )
     faketime_args = parser.add_mutually_exclusive_group()
@@ -126,41 +126,42 @@ def main() -> None:
         "-f",
         "--faketime",
         help=f"use faketime (must be installed) - default: {conf.faketime}"
-        f" (env: DECKDEBUILD_FAKETIME={str(conf.faketime).lower()})",
+        f" (env: DECKDEBUILD_FAKETIME=true)",
         action=arg_action(conf.faketime),
     )
     faketime_args.add_argument(
         "-N",
         "--no-faketime",
         help=f"do not use faketime - default: {not conf.faketime}"
-        f" (env: DECKDEBUILD_FAKETIME={str(not conf.faketime).lower()})",
+        f" (env: DECKDEBUILD_FAKETIME=false)",
         action=arg_action(conf.faketime),
     )
     parser.add_argument(
         "--satisfydepends-cmd",
         help="program used to satisfy build dependencies - default:"
         f"{conf.satisfydepends_cmd} (env:"
-        f" DECKDEBUILD_SATISFYDEPENDS_CMD={conf.satisfydepends_cmd})",
+        f" DECKDEBUILD_SATISFYDEPENDS_CMD="
+        "/usr/lib/pbuilder/pbuilder-satisfydepends-classic)",
         default=conf.satisfydepends_cmd,
     )
     parser.add_argument(
         "--vardir",
         help=f"var data path - default: {conf.vardir} (env:"
-        f" DECKDEBUILD_VARDIR={conf.vardir})",
+        f" DECKDEBUILD_VARDIR=/path/to/var_dir)",
         default=conf.vardir,
     )
     parser.add_argument(
         "-b",
         "--build-source",
         help=f"Build source package too default: {conf.build_source} (env:"
-        f" DECKDEBUILD_BUILD_SOURCE={str(conf.build_source).lower()})",
+        " DECKDEBUILD_BUILD_SOURCE=true)",
         action=arg_action(conf.build_source),
     )
     parser.add_argument(
         "-P",
         "--mount-proc",
         help=f"Mount /proc in buildroot - default: {conf.mount_proc} (env:"
-        f" DECKDEBUILD_MOUNT_PROC={str(conf.mount_proc).lower()})",
+        " DECKDEBUILD_MOUNT_PROC=true)",
         action=arg_action(conf.mount_proc),
     )
     parser.add_argument(

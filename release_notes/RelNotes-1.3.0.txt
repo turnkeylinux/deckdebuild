@@ -1,0 +1,30 @@
+v1.3.0 Release Notes
+====================
+
+Bugfixes, feature, reproducable package support and significant code cleanup.
+
+* Bugfixes
+  - Fix support for 'faketime' so deckdebuild can build reproducible packages.
+  - Various minor bugfixes.
+
+* Feature:
+  - New more granular options for improved "preserve buildroot" behavior.
+      --preserve-buildroot-on-error (default)
+      --preserve-buildroot-always
+      --preserve-buildroot-never
+
+* Code improvements and cleanup:
+  - Check for root.
+  - Remove 'turnkey-conffile' dependency and include new config parsing code
+    (config file, env & arguments).
+  - Include complete config file.
+  - Other significant refactoring.
+  - Linting fixes.
+  - Increased typing coverage, updates & improvements.
+  - Standardised formatting.
+  - Update all comment and doc URLs to https.
+  - Remove defunct deckdebuild.leo file.
+  
+* Packaging:
+  - Update package arch to 'all'.
+  - Support reproducible build (of deckdebuild itself).
